@@ -41,6 +41,23 @@ class PermissionSeeder extends Seeder{
         Permission::create(['name' => 'editar uso habitacion']);
         Permission::create(['name' => 'eliminar uso habitacion']);
         Permission::create(['name' => 'ver uso habitacion']);
+        #Inicio del inventario
+        #Categorias
+        Permission::create(['name' => 'crear categorias']);
+        Permission::create(['name' => 'editar categorias']);
+        Permission::create(['name' => 'eliminar categorias']);
+        Permission::create(['name' => 'ver categorias']);
+        #Productos
+        Permission::create(['name' => 'crear productos']);
+        Permission::create(['name' => 'editar productos']);
+        Permission::create(['name' => 'eliminar productos']);
+        Permission::create(['name' => 'ver productos']);
+        #Inventario
+        Permission::create(['name' => 'crear inventario']);
+        Permission::create(['name' => 'editar inventario']);
+        Permission::create(['name' => 'eliminar inventario']);
+        Permission::create(['name' => 'ver inventario']);
+        #Fin del inventario
         #User
         Permission::create(['name' => 'crear usuarios']);
         Permission::create(['name' => 'editar usuarios']);

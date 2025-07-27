@@ -29,7 +29,8 @@ const model = computed(() => [
     {
         label: 'Inventario',
         items: [
-            { label: 'Producto', icon: 'pi pi-fw pi-box', to: '/inventario/productos' },
+            { label: 'Categoria', icon: 'pi pi-fw pi-box', to: '/categorias' },
+            { label: 'Producto', icon: 'pi pi-fw pi-box', to: '/productos' },
         ]
     },
     {

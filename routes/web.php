@@ -1,18 +1,22 @@
 <?php
 
+use App\Http\Controllers\Api\CategoriaController;
 use App\Http\Controllers\Api\ClienteController;
 use App\Http\Controllers\Api\ConsultasDni;
 use App\Http\Controllers\Api\HabitacionController;
 use App\Http\Controllers\Api\HorarioController;
 use App\Http\Controllers\Api\PisoController;
+use App\Http\Controllers\Api\ProductoController;
 use App\Http\Controllers\Api\RolesController;
 use App\Http\Controllers\Api\TipoHabitacionController;
 use App\Http\Controllers\Api\UsoHabitacionController;
 use App\Http\Controllers\Api\UsuariosController;
+use App\Http\Controllers\Web\Categoria\CategoriaWeb;
 use App\Http\Controllers\Web\Cliente\ClienteWeb;
 use App\Http\Controllers\Web\Habitacion\HabitacionWeb;
 use App\Http\Controllers\Web\Horario\HorarioWeb;
 use App\Http\Controllers\Web\Piso\PisoWeb;
+use App\Http\Controllers\Web\Producto\ProductoWeb;
 use App\Http\Controllers\Web\TipoHabitacion\TipoHabitacionWeb;
 use App\Http\Controllers\Web\UsoHabitacion\UsoHabitacionWeb;
 use App\Http\Controllers\Web\UsuarioWebController;
@@ -43,6 +47,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/pisos', [PisoWeb::class, 'view'])->name('pisos.view');
     Route::get('/tipos-habitaciones', [TipoHabitacionWeb::class, 'view'])->name('tipos-habitaciones.view');
     Route::get('/uso-habitaciones', [UsoHabitacionWeb::class, 'view'])->name('uso-habitaciones.view');
+    Route::get('/categorias', [CategoriaWeb::class, 'view'])->name('categoria.view');
+    Route::get('/productos', [ProductoWeb::class, 'view'])->name('categoria.view');
 
     #CLIENTES -> CLIENTES
     Route::prefix('cliente')->group(function () {
@@ -51,6 +57,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/', [ClienteController::class, 'store']);
         Route::put('/{cliente}', [ClienteController::class, 'update']);
         Route::delete('/{cliente}', [ClienteController::class, 'destroy']);
+    });
+
+    #PRODUCTOS -> BACKEND
+    Route::prefix('producto')->group(function(){
+        Route::get('/', [ProductoController::class, 'index'])->name('Productos.index');
+        Route::post('/',[ProductoController::class, 'store'])->name('Productos.store');
+        Route::get('/{product}',[ProductoController::class, 'show'])->name('Productos.show');
+        Route::put('/{product}',[ProductoController::class, 'update'])->name('Productos.update');
+        Route::delete('/{product}',[ProductoController::class, 'destroy'])->name('Productos.destroy');
     });
 
     #HABITACIONES -> BACKEND
@@ -98,6 +113,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{usoHabitacion}', [UsoHabitacionController::class, 'destroy']);
     });
     
+    #CATEGORIA -> BACKEND
+    Route::prefix('categoria')->group(function(){
+        Route::get('/', [CategoriaController::class, 'index'])->name('Categoria.index');
+        Route::post('/',[CategoriaController::class, 'store'])->name('Categoria.store');
+        Route::get('/{category}',[CategoriaController::class, 'show'])->name('Categoria.show');
+        Route::put('/{category}',[CategoriaController::class, 'update'])->name('Categoria.update');
+        Route::delete('/{category}',[CategoriaController::class, 'destroy'])->name('Categoria.destroy');
+    });
+
     #USUARIOS -> BACKEND
     Route::prefix('usuarios')->group(function(){
         Route::get('/', [UsuariosController::class, 'index'])->name('usuarios.index');
