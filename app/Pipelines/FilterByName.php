@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Pipelines;
+
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
+
 class FilterByName{
     public function __construct(private ?string $search) {}
     public function __invoke(Builder $builder, Closure $next){
@@ -14,8 +16,12 @@ class FilterByName{
         $builder->where(function ($q) use ($terms) {
             foreach ($terms as $term) {
                 $q->orWhere(function ($sub) use ($term) {
-                    $sub->where('nombre', 'ILIKE', "%{$term}%")
-                        ->orWhereRaw("CASE WHEN state THEN 'activo' ELSE 'inactivo' END ILIKE ?", ["%{$term}%"]);
+                    $sub->where('name', 'ILIKE', "%{$term}%")
+                        ->orWhere('code', 'ILIKE', "%{$term}%")
+                        ->orWhereRaw(
+                            "CASE WHEN is_active THEN 'activo' ELSE 'inactivo' END ILIKE ?",
+                            ["%{$term}%"]
+                        );
                 });
             }
         });

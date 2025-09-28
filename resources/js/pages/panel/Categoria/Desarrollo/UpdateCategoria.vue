@@ -61,8 +61,8 @@ const updateCategoria = async () => {
 
     try {
         const categoriaData = {
-            nombre: categoria.value.nombre,
-            estado: categoria.value.estado === true,
+            name: categoria.value.nombre,
+            is_active: categoria.value.estado === true,
         };
 
         await axios.put(`/categoria/${props.categoriaId}`, categoriaData);

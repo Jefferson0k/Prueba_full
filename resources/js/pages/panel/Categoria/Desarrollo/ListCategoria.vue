@@ -81,10 +81,10 @@
                 page: pagination.value.currentPage,
                 per_page: pagination.value.perPage,
                 search: globalFilterValue.value,
-                estado: filters.value.estado,
+                state: filters.value.estado,
             };
             if (selectedEstadoCategoria.value !== null && selectedEstadoCategoria.value.value !== '') {
-                params.estado = selectedEstadoCategoria.value.value;
+                params.state = selectedEstadoCategoria.value.value;
             }
 
             const response = await axios.get('/categoria', { params });
@@ -127,7 +127,7 @@
             :rows="pagination.perPage" :totalRecords="pagination.total" :loading="loading" :lazy="true" @page="onPage"
             :rowsPerPageOptions="[15, 20, 25]" scrollable scrollHeight="574px"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} categorías">
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} categorías" class="p-datatable-sm">
 
             <template #header>
                 <div class="flex flex-wrap gap-2 items-center justify-between">
@@ -147,7 +147,8 @@
             </template>
 
             <Column selectionMode="multiple" style="width: 1rem" :exportable="false"></Column>
-            <Column field="nombre" header="Nombre" sortable style="min-width: 13rem"></Column>
+            <Column field="codigo" header="Codigo" sortable style="min-width: 5rem"></Column>
+            <Column field="nombre" header="Nombre" sortable style="min-width: 15rem"></Column>
             <Column field="creacion" header="Creación" sortable style="min-width: 13rem"></Column>
             <Column field="actualizacion" header="Actualización" sortable style="min-width: 13rem"></Column>
             <Column field="estado" header="Estado" sortable style="min-width: 4rem">

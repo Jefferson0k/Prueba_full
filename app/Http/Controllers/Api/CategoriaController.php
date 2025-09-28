@@ -12,6 +12,7 @@ use App\Pipelines\FilterByName;
 use App\Pipelines\FilterByState;
 use Illuminate\Http\Request;
 use Illuminate\Pipeline\Pipeline;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 class CategoriaController extends Controller{
@@ -31,16 +32,18 @@ class CategoriaController extends Controller{
     public function store(StoreCategoriaRequest $request){
         Gate::authorize('create', Categoria::class);
         $validated = $request->validated();
-        $exists = Categoria::whereRaw('LOWER(nombre) = ?', [$validated['nombre']])->exists();
+        $exists = Categoria::whereRaw('LOWER(name) = ?', [strtolower($validated['name'])])->exists();
         if ($exists) {
             return response()->json([
-                'errors' => ['nombre' => ['Este nombre ya está registrado.']]
+                'errors' => ['name' => ['Este nombre ya está registrado.']]
             ], 422);
         }
+        $validated['created_by'] = Auth::id();
+        $validated['updated_by'] = Auth::id();
         $category = Categoria::create($validated);
         return response()->json([
-            'state' => true,
-            'message' => 'Almacén registrado correctamente.',
+            'state'    => true,
+            'message'  => 'Categoría registrada correctamente.',
             'category' => $category
         ]);
     }
@@ -55,23 +58,26 @@ class CategoriaController extends Controller{
     public function update(UpdateCategoriaRequest $request, Categoria $category){
         Gate::authorize('update', $category);
         $validated = $request->validated();
-        $nameExists = Categoria::whereRaw('LOWER(nombre) = ?', [strtolower($validated['nombre'])])
+        $nameExists = Categoria::whereRaw('LOWER(name) = ?', [strtolower($validated['name'])])
             ->where('id', '!=', $category->id)
             ->exists();
         if ($nameExists) {
             return response()->json([
-                'errors' => ['nombre' => ['Este nombre ya está registrado.']]
+                'errors' => ['name' => ['Este nombre ya está registrado.']]
             ], 422);
         }
+        $validated['updated_by'] = Auth::id();
         $category->update($validated);
         return response()->json([
             'state' => true,
-            'message' => 'Tipo de cliente actualizado de manera correcta',
+            'message' => 'Categoría actualizada correctamente.',
             'category' => new CategoriaResource($category->refresh()),
         ]);
     }
     public function destroy(Categoria $category){
         Gate::authorize('delete', $category);
+        $category->deleted_by = Auth::id();
+        $category->save();
         $category->delete();
         return response()->json([
             'state' => true,

@@ -9,25 +9,25 @@ class StoreCategoriaRequest extends FormRequest{
     }
     public function prepareForValidation(): void{
         $this->merge([
-            'nombre' => strtolower($this->input('nombre')),
+            'name' => strtolower($this->input('name')),
         ]);
     }
 
     public function rules(): array{
         return [
-            'nombre' => 'required|string|max:100',
-            'estado' => 'required|boolean',
+            'name' => 'required|string|max:100',
+            'is_active' => 'required|boolean',
         ];
     }
 
     public function messages(): array{
         return [
-            'nombre.required' => 'El nombre es obligatorio.',
-            'nombre.string' => 'El nombre debe ser texto.',
-            'nombre.max' => 'El nombre no debe exceder los 100 caracteres.',
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser texto.',
+            'name.max' => 'El nombre no debe exceder los 100 caracteres.',
 
-            'estado.required' => 'El estado es obligatorio.',
-            'estado.boolean' => 'El estado debe ser verdadero o falso.',
+            'is_active.required' => 'El estado es obligatorio.',
+            'is_active.boolean' => 'El estado debe ser verdadero o falso.',
         ];
     }
 }

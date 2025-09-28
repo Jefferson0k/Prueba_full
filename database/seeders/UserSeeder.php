@@ -8,40 +8,51 @@ use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
-class UserSeeder extends Seeder{
-    public function run(): void{
-        $adminRole = Role::where('name', 'administrador')->first();
-        $personalRole = Role::where('name', 'personal')->first();
+class UserSeeder extends Seeder
+{
+    public function run(): void
+    {
+        // Obtener roles
+        $adminRole = Role::firstOrCreate(['name' => 'administrador']);
+        $personalRole = Role::firstOrCreate(['name' => 'personal']);
+
+        // Sincronizar permisos al rol administrador
         $permissions = Permission::all();
         if ($adminRole) {
             $adminRole->syncPermissions($permissions);
         }
 
-        $admin_1 = User::create([
-            'name' => 'Jefferson Grabiel',
-            'dni' => '76393671',
-            'apellidos' => 'Covenas Roman',
-            'nacimiento' => '2003-03-11',
-            'email' => 'jefersoncovenas7@gmail.com',
-            'username' => 'JCOVENASRO11',
-            'password' => Hash::make('12345678'),
-            'status' => true,
-            'restablecimiento' => 0,
-        ]);
+        // Crear usuarios evitando duplicados
+        $admin_1 = User::firstOrCreate(
+            ['dni' => '76393671'],
+            [
+                'name' => 'Jefferson Grabiel',
+                'apellidos' => 'Covenas Roman',
+                'nacimiento' => '2003-03-11',
+                'email' => 'jefersoncovenas7@gmail.com',
+                'username' => 'JCOVENASRO11',
+                'password' => Hash::make('12345678'),
+                'status' => true,
+                'restablecimiento' => 0,
+            ]
+        );
 
-        $admin_2 = User::create([
-            'name' => 'Luis Fernando',
-            'dni' => '07777777',
-            'apellidos' => 'Atocha Gonzales',
-            'nacimiento' => '2003-03-11',
-            'email' => 'luisatocha@gmail.com',
-            'username' => 'LATOCHA05',
-            'password' => Hash::make('12345678'),
-            'status' => true,
-            'restablecimiento' => 0,
-        ]);
+        $admin_2 = User::firstOrCreate(
+            ['dni' => '07777777'],
+            [
+                'name' => 'Luis Fernando',
+                'apellidos' => 'Atocha Gonzales',
+                'nacimiento' => '2003-03-11',
+                'email' => 'luisatocha@gmail.com',
+                'username' => 'LATOCHA05',
+                'password' => Hash::make('12345678'),
+                'status' => true,
+                'restablecimiento' => 0,
+            ]
+        );
 
-        $admin_1->assignRole($adminRole);
-        $admin_2->assignRole($adminRole);
+        // Asignar roles
+        if ($adminRole) $admin_1->assignRole($adminRole);
+        if ($adminRole) $admin_2->assignRole($adminRole);
     }
 }

@@ -5,7 +5,7 @@
         </template>
     </Toolbar>
 
-    <Dialog v-model:visible="productoDialog" :style="{ width: '700px' }" header="Registro de productos" :modal="true">
+    <Dialog v-model:visible="productoDialog" :style="{ width: '800px' }" header="Registro de productos" :modal="true">
         <div class="flex flex-col gap-6">
             <div class="grid grid-cols-12 gap-4">
                 <!-- Nombre y Estado en una sola fila -->
@@ -13,43 +13,60 @@
                     <!-- Nombre -->
                     <div class="col-span-10">
                         <label class="block font-bold mb-2">Nombre <span class="text-red-500">*</span></label>
-                        <InputText v-model.trim="producto.nombre" fluid maxlength="100" />
-                        <small v-if="submitted && !producto.nombre" class="text-red-500">El nombre es obligatorio.</small>
-                        <small v-else-if="submitted && producto.nombre.length < 2" class="text-red-500">El nombre debe tener al menos 2 caracteres.</small>
-                        <small v-else-if="serverErrors.nombre" class="text-red-500">{{ serverErrors.nombre[0] }}</small>
+                        <InputText v-model.trim="producto.name" fluid maxlength="100" />
+                        <small v-if="submitted && !producto.name" class="text-red-500">El nombre es obligatorio.</small>
+                        <small v-else-if="submitted && producto.name.length < 2" class="text-red-500">El nombre debe tener al menos 2 caracteres.</small>
+                        <small v-else-if="serverErrors.name" class="text-red-500">{{ serverErrors.name[0] }}</small>
                     </div>
                     <!-- Estado -->
                     <div class="col-span-2">
                         <label class="block font-bold mb-2">Estado <span class="text-red-500">*</span></label>
                         <div class="flex items-center gap-2">
-                            <Checkbox v-model="producto.estado" :binary="true" />
-                            <Tag :value="producto.estado ? 'Activo' : 'Inactivo'" :severity="producto.estado ? 'success' : 'danger'" />
+                            <Checkbox v-model="producto.is_active" :binary="true" />
+                            <Tag :value="producto.is_active ? 'Activo' : 'Inactivo'" :severity="producto.is_active ? 'success' : 'danger'" />
                         </div>
-                        <small v-if="submitted && producto.estado === null" class="text-red-500">El estado es obligatorio.</small>
-                        <small v-else-if="serverErrors.estado" class="text-red-500">{{ serverErrors.estado[0] }}</small>
+                        <small v-if="submitted && producto.is_active === null" class="text-red-500">El estado es obligatorio.</small>
+                        <small v-else-if="serverErrors.is_active" class="text-red-500">{{ serverErrors.is_active[0] }}</small>
                     </div>
                 </div>
+                
                 <!-- Precio Compra -->
                 <div class="col-span-6">
                     <label class="block font-bold mb-2">Precio Compra <span class="text-red-500">*</span></label>
-                    <InputText v-model.number="producto.precio_compra" type="number" fluid min="0" />
-                    <small v-if="submitted && (producto.precio_compra === null || producto.precio_compra === '')" class="text-red-500">El precio de compra es obligatorio.</small>
-                    <small v-else-if="serverErrors.precio_compra" class="text-red-500">{{ serverErrors.precio_compra[0] }}</small>
+                    <InputText v-model.number="producto.purchase_price" type="number" fluid min="0" step="0.01" />
+                    <small v-if="submitted && (producto.purchase_price === null || producto.purchase_price === '')" class="text-red-500">El precio de compra es obligatorio.</small>
+                    <small v-else-if="serverErrors.purchase_price" class="text-red-500">{{ serverErrors.purchase_price[0] }}</small>
                 </div>
 
                 <!-- Precio Venta -->
                 <div class="col-span-6">
                     <label class="block font-bold mb-2">Precio Venta <span class="text-red-500">*</span></label>
-                    <InputText v-model.number="producto.precio_venta" fluid type="number" min="0" />
-                    <small v-if="submitted && (producto.precio_venta === null || producto.precio_venta === '')" class="text-red-500">El precio de venta es obligatorio.</small>
-                    <small v-else-if="serverErrors.precio_venta" class="text-red-500">{{ serverErrors.precio_venta[0] }}</small>
+                    <InputText v-model.number="producto.sale_price" fluid type="number" min="0" step="0.01" />
+                    <small v-if="submitted && (producto.sale_price === null || producto.sale_price === '')" class="text-red-500">El precio de venta es obligatorio.</small>
+                    <small v-else-if="serverErrors.sale_price" class="text-red-500">{{ serverErrors.sale_price[0] }}</small>
                 </div>
+
                 <!-- Categoría -->
-                <div class="col-span-12">
+                <div class="col-span-6">
                     <label class="block font-bold mb-2">Categoría <span class="text-red-500">*</span></label>
-                    <Select v-model="producto.categoria_id" :options="categorias" fluid optionLabel="label" optionValue="value" placeholder="Seleccione categoría" />
-                    <small v-if="submitted && !producto.categoria_id" class="text-red-500">La categoría es obligatoria.</small>
-                    <small v-else-if="serverErrors.categoria_id" class="text-red-500">{{ serverErrors.categoria_id[0] }}</small>
+                    <Select v-model="producto.category_id" :options="categorias" fluid optionLabel="label" optionValue="value" placeholder="Seleccione categoría" />
+                    <small v-if="submitted && !producto.category_id" class="text-red-500">La categoría es obligatoria.</small>
+                    <small v-else-if="serverErrors.category_id" class="text-red-500">{{ serverErrors.category_id[0] }}</small>
+                </div>
+
+                <!-- Tipo de Unidad -->
+                <div class="col-span-6">
+                    <label class="block font-bold mb-2">Tipo de Unidad <span class="text-red-500">*</span></label>
+                    <Select v-model="producto.unit_type" :options="tiposUnidad" fluid optionLabel="label" optionValue="value" placeholder="Seleccione tipo de unidad" />
+                    <small v-if="submitted && !producto.unit_type" class="text-red-500">El tipo de unidad es obligatorio.</small>
+                    <small v-else-if="serverErrors.unit_type" class="text-red-500">{{ serverErrors.unit_type[0] }}</small>
+                </div>
+
+                <!-- Descripción -->
+                <div class="col-span-12">
+                    <label class="block font-bold mb-2">Descripción</label>
+                    <Textarea v-model="producto.description" fluid rows="3" maxlength="1000" placeholder="Descripción del producto (opcional)" />
+                    <small v-if="serverErrors.description" class="text-red-500">{{ serverErrors.description[0] }}</small>
                 </div>
             </div>
         </div>
@@ -69,8 +86,9 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Checkbox from 'primevue/checkbox';
 import Tag from 'primevue/tag';
-import { useToast } from 'primevue/usetoast';
 import Select from 'primevue/select';
+import Textarea from 'primevue/textarea';
+import { useToast } from 'primevue/usetoast';
 
 const toast = useToast();
 const submitted = ref(false);
@@ -79,22 +97,34 @@ const serverErrors = ref({});
 const emit = defineEmits(['producto-agregado']);
 
 const producto = ref({
-    nombre: '',
-    estado: true,
-    precio_compra: null,
-    precio_venta: null,
-    categoria_id: null,
+    name: '',
+    is_active: true,
+    purchase_price: null,
+    sale_price: null,
+    category_id: null,
+    unit_type: null,
+    description: '',
 });
 
 const categorias = ref([]);
 
+const tiposUnidad = ref([
+    { label: 'Unidad', value: 'piece' },
+    { label: 'Botella', value: 'bottle' },
+    { label: 'Paquete', value: 'pack' },
+    { label: 'Kilogramo', value: 'kg' },
+    { label: 'Litro', value: 'liter' },
+]);
+
 function resetProducto() {
     producto.value = {
-        nombre: '',
-        estado: true,
-        precio_compra: null,
-        precio_venta: null,
-        categoria_id: null,
+        name: '',
+        is_active: true,
+        purchase_price: null,
+        sale_price: null,
+        category_id: null,
+        unit_type: null,
+        description: '',
     };
     serverErrors.value = {};
     submitted.value = false;

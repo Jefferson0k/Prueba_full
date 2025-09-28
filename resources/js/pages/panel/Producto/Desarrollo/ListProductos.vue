@@ -117,6 +117,7 @@ onMounted(loadProductos);
         scrollable scrollHeight="574px"
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
+        class="p-datatable-sm"
     >
         <template #header>
             <div class="flex flex-wrap gap-2 items-center justify-between">
@@ -140,10 +141,24 @@ onMounted(loadProductos);
         </template>
 
         <Column selectionMode="multiple" style="width: 1rem" />
+        <Column field="codigo" header="Codigo" sortable style="min-width: 5rem" />
         <Column field="nombre" header="Nombre" sortable style="min-width: 20rem" />
+        <Column 
+            field="descripcion" 
+            header="Descripcion" 
+            sortable 
+            style="min-width: 20rem"
+        >
+            <template #body="slotProps">
+            <div class="truncate max-w-xs" :title="slotProps.data.descripcion">
+                {{ slotProps.data.descripcion }}
+            </div>
+            </template>
+        </Column>
         <Column field="precio_compra" header="Precio Compra" sortable style="min-width: 10rem" />
         <Column field="precio_venta" header="Precio Venta" sortable style="min-width: 10rem" />
-        <Column field="Categoria_nombre" header="Categoría" sortable style="min-width: 15rem" />
+        <Column field="unidad" header="Unidad" sortable style="min-width: 5rem" />
+        <Column field="Categoria_nombre" header="Categoría" sortable style="min-width: 10rem" />
         <Column field="creacion" header="Creación" sortable style="min-width: 13rem" />
         <Column field="actualizacion" header="Actualización" sortable style="min-width: 13rem" />
         <Column field="estado" header="Estado" sortable>

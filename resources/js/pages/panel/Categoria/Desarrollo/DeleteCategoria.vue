@@ -49,7 +49,7 @@ async function deleteCategoria() {
         @update:visible="closeDialog">
         <div class="flex items-center gap-4">
             <i class="pi pi-exclamation-triangle !text-3xl" />
-            <span v-if="categoria">¿Estás seguro de eliminar esta categoría <b>{{ categoria.name }}</b>?</span>
+            <span v-if="categoria">¿Estás seguro de eliminar esta categoría <b>{{ categoria.nombre }}</b>?</span>
         </div>
         <template #footer>
             <Button label="No" icon="pi pi-times" text @click="closeDialog" />

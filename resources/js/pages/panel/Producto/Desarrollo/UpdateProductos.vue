@@ -7,12 +7,13 @@ import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
 import Select from 'primevue/select';
 import Tag from 'primevue/tag';
+import Textarea from 'primevue/textarea';
 import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 
 const props = defineProps({
     visible: Boolean,
-    productoId: Number
+    productoId: String
 });
 const emit = defineEmits(['update:visible', 'updated']);
 
@@ -26,14 +27,24 @@ watch(() => props.visible, (val) => dialogVisible.value = val);
 watch(dialogVisible, (val) => emit('update:visible', val));
 
 const producto = ref({
-    nombre: '',
-    categoria_id: null,
-    estado: false,
-    precio_compra: null,
-    precio_venta: null
+    name: '',
+    category_id: null,
+    is_active: false,
+    purchase_price: null,
+    sale_price: null,
+    unit_type: null,
+    description: ''
 });
 
 const categorias = ref([]);
+
+const tiposUnidad = ref([
+    { label: 'Unidad', value: 'piece' },
+    { label: 'Botella', value: 'bottle' },
+    { label: 'Paquete', value: 'pack' },
+    { label: 'Kilogramo', value: 'kg' },
+    { label: 'Litro', value: 'liter' },
+]);
 
 watch(() => props.visible, async (val) => {
     if (val && props.productoId) {
@@ -49,11 +60,13 @@ const fetchProducto = async () => {
         const p = data.product;
 
         producto.value = {
-            nombre: p.nombre,
-            categoria_id: p.categoria_id,
-            estado: true,
-            precio_compra: parseFloat(p.precio_compra),
-            precio_venta: parseFloat(p.precio_venta),
+            name: p.name || p.nombre,
+            category_id: p.category_id || p.categoria_id,
+            is_active: p.is_active !== undefined ? p.is_active : p.estado,
+            purchase_price: parseFloat(p.purchase_price || p.precio_compra),
+            sale_price: parseFloat(p.sale_price || p.precio_venta),
+            unit_type: p.unit_type || p.unidad,
+            description: p.description || p.descripcion || ''
         };
     } catch {
         toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el producto', life: 3000 });
@@ -110,53 +123,73 @@ const updateProducto = async () => {
 
 <template>
     <Dialog v-model:visible="dialogVisible" header="Editar Producto" modal :closable="true" :closeOnEscape="true"
-        :style="{ width: '700px' }">
+        :style="{ width: '800px' }">
         <div class="flex flex-col gap-6">
             <div class="grid grid-cols-12 gap-4">
-                <!-- Nombre -->
-                <div class="col-span-10">
-                    <label class="block font-bold mb-2">Nombre <span class="text-red-500">*</span></label>
-                    <InputText v-model="producto.nombre" maxlength="100" fluid
-                        :class="{ 'p-invalid': submitted && serverErrors.nombre }" />
-                    <small v-if="serverErrors.nombre" class="text-red-500">{{ serverErrors.nombre[0] }}</small>
+                <!-- Nombre y Estado en una sola fila -->
+                <div class="col-span-12 grid grid-cols-12 gap-4">
+                    <!-- Nombre -->
+                    <div class="col-span-10">
+                        <label class="block font-bold mb-2">Nombre <span class="text-red-500">*</span></label>
+                        <InputText v-model="producto.name" maxlength="100" fluid
+                            :class="{ 'p-invalid': submitted && serverErrors.name }" />
+                        <small v-if="serverErrors.name" class="text-red-500">{{ serverErrors.name[0] }}</small>
+                    </div>
+                    <!-- Estado -->
+                    <div class="col-span-2">
+                        <label class="block font-bold mb-2">Estado <span class="text-red-500">*</span></label>
+                        <div class="flex items-center gap-2">
+                            <Checkbox v-model="producto.is_active" :binary="true" />
+                            <Tag :value="producto.is_active ? 'Activo' : 'Inactivo'"
+                                :severity="producto.is_active ? 'success' : 'danger'" />
+                        </div>
+                        <small v-if="serverErrors.is_active" class="text-red-500">{{ serverErrors.is_active[0] }}</small>
+                    </div>
                 </div>
 
-                <!-- Estado -->
-                <div class="col-span-2">
-                    <label class="block font-bold mb-2">Estado <span class="text-red-500">*</span></label>
-                    <div class="flex items-center gap-3">
-                        <Checkbox v-model="producto.estado" :binary="true" fluid />
-                        <Tag :value="producto.estado ? 'Activo' : 'Inactivo'"
-                            :severity="producto.estado ? 'success' : 'danger'" />
-                    </div>
-                    <small v-if="serverErrors.estado" class="text-red-500">{{ serverErrors.estado[0] }}</small>
+                <!-- Precio Compra -->
+                <div class="col-span-6">
+                    <label class="block font-bold mb-2">Precio Compra <span class="text-red-500">*</span></label>
+                    <InputNumber v-model="producto.purchase_price" mode="currency" currency="PEN" locale="es-PE"
+                        :minFractionDigits="2" fluid
+                        :class="{ 'p-invalid': submitted && serverErrors.purchase_price }" />
+                    <small v-if="serverErrors.purchase_price" class="text-red-500">{{ serverErrors.purchase_price[0] }}</small>
+                </div>
+
+                <!-- Precio Venta -->
+                <div class="col-span-6">
+                    <label class="block font-bold mb-2">Precio Venta <span class="text-red-500">*</span></label>
+                    <InputNumber v-model="producto.sale_price" mode="currency" currency="PEN" locale="es-PE"
+                        :minFractionDigits="2" fluid
+                        :class="{ 'p-invalid': submitted && serverErrors.sale_price }" />
+                    <small v-if="serverErrors.sale_price" class="text-red-500">{{ serverErrors.sale_price[0] }}</small>
                 </div>
 
                 <!-- Categoría -->
                 <div class="col-span-6">
                     <label class="block font-bold mb-2">Categoría <span class="text-red-500">*</span></label>
-                    <Select v-model="producto.categoria_id" :options="categorias" optionLabel="label" optionValue="value"
+                    <Select v-model="producto.category_id" :options="categorias" optionLabel="label" optionValue="value"
                         placeholder="Seleccione una categoría" fluid
-                        :class="{ 'p-invalid': submitted && serverErrors.categoria_id }" />
-                    <small v-if="serverErrors.categoria_id" class="text-red-500">{{ serverErrors.categoria_id[0] }}</small>
+                        :class="{ 'p-invalid': submitted && serverErrors.category_id }" />
+                    <small v-if="serverErrors.category_id" class="text-red-500">{{ serverErrors.category_id[0] }}</small>
                 </div>
 
-                <!-- Precio Compra -->
-                <div class="col-span-3">
-                    <label class="block font-bold mb-2">Precio Compra <span class="text-red-500">*</span></label>
-                    <InputNumber v-model="producto.precio_compra" mode="currency" currency="PEN" locale="es-PE"
-                        :minFractionDigits="2" fluid
-                        :class="{ 'p-invalid': submitted && serverErrors.precio_compra }" />
-                    <small v-if="serverErrors.precio_compra" class="text-red-500">{{ serverErrors.precio_compra[0] }}</small>
+                <!-- Tipo de Unidad -->
+                <div class="col-span-6">
+                    <label class="block font-bold mb-2">Tipo de Unidad <span class="text-red-500">*</span></label>
+                    <Select v-model="producto.unit_type" :options="tiposUnidad" optionLabel="label" optionValue="value"
+                        placeholder="Seleccione tipo de unidad" fluid
+                        :class="{ 'p-invalid': submitted && serverErrors.unit_type }" />
+                    <small v-if="serverErrors.unit_type" class="text-red-500">{{ serverErrors.unit_type[0] }}</small>
                 </div>
 
-                <!-- Precio Venta -->
-                <div class="col-span-3">
-                    <label class="block font-bold mb-2">Precio Venta <span class="text-red-500">*</span></label>
-                    <InputNumber v-model="producto.precio_venta" mode="currency" currency="PEN" locale="es-PE"
-                        :minFractionDigits="2" fluid
-                        :class="{ 'p-invalid': submitted && serverErrors.precio_venta }" />
-                    <small v-if="serverErrors.precio_venta" class="text-red-500">{{ serverErrors.precio_venta[0] }}</small>
+                <!-- Descripción -->
+                <div class="col-span-12">
+                    <label class="block font-bold mb-2">Descripción</label>
+                    <Textarea v-model="producto.description" fluid rows="3" maxlength="1000" 
+                        placeholder="Descripción del producto (opcional)"
+                        :class="{ 'p-invalid': submitted && serverErrors.description }" />
+                    <small v-if="serverErrors.description" class="text-red-500">{{ serverErrors.description[0] }}</small>
                 </div>
             </div>
         </div>

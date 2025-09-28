@@ -11,12 +11,22 @@ use App\Http\Controllers\Api\RolesController;
 use App\Http\Controllers\Api\TipoHabitacionController;
 use App\Http\Controllers\Api\UsoHabitacionController;
 use App\Http\Controllers\Api\UsuariosController;
+use App\Http\Controllers\Panel\BranchController;
+use App\Http\Controllers\Panel\FloorController;
+use App\Http\Controllers\Panel\RoomController;
+use App\Http\Controllers\Panel\RoomTypeController;
+use App\Http\Controllers\Panel\SubBranchController;
+use App\Http\Controllers\Panel\SystemSettingController;
+use App\Http\Controllers\Web\Branch\BranchWeb;
+use App\Http\Controllers\Web\SubBranch\SubBranchWeb;
 use App\Http\Controllers\Web\Categoria\CategoriaWeb;
 use App\Http\Controllers\Web\Cliente\ClienteWeb;
-use App\Http\Controllers\Web\Habitacion\HabitacionWeb;
+use App\Http\Controllers\Web\Floor\FloorWeb;
 use App\Http\Controllers\Web\Horario\HorarioWeb;
 use App\Http\Controllers\Web\Piso\PisoWeb;
 use App\Http\Controllers\Web\Producto\ProductoWeb;
+use App\Http\Controllers\Web\Room\RoomWeb;
+use App\Http\Controllers\Web\SystemSetting\SystemSettingWeb;
 use App\Http\Controllers\Web\TipoHabitacion\TipoHabitacionWeb;
 use App\Http\Controllers\Web\UsoHabitacion\UsoHabitacionWeb;
 use App\Http\Controllers\Web\UsuarioWebController;
@@ -37,18 +47,74 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('dashboard');
 
-    #VISTAS DEL FRONTEND
-    Route::get('/usuario', [UsuarioWebController::class,'index'])->name('index.view');
-    Route::get('/consulta/{dni}', [ConsultasDni::class, 'consultar'])->name('consultar.view');
-    Route::get('/roles', [UsuarioWebController::class, 'roles'])->name('roles.view');
-    Route::get('/clientes', [ClienteWeb::class, 'view'])->name('clientes.view');
-    Route::get('/habitaciones', [HabitacionWeb::class, 'view'])->name('habitaciones.view');
-    Route::get('/horarios', [HorarioWeb::class, 'view'])->name('horarios.view');
-    Route::get('/pisos', [PisoWeb::class, 'view'])->name('pisos.view');
-    Route::get('/tipos-habitaciones', [TipoHabitacionWeb::class, 'view'])->name('tipos-habitaciones.view');
-    Route::get('/uso-habitaciones', [UsoHabitacionWeb::class, 'view'])->name('uso-habitaciones.view');
-    Route::get('/categorias', [CategoriaWeb::class, 'view'])->name('categoria.view');
-    Route::get('/productos', [ProductoWeb::class, 'view'])->name('categoria.view');
+    # VISTAS DEL FRONTEND
+    Route::prefix('panel')->group(function () {
+        Route::get('/branches/{id}/sub-branches', [SubBranchWeb::class,'view'])->name('branches.subbranches.view');
+        Route::get('/usuario', [UsuarioWebController::class,'index'])->name('usuario.index');
+        Route::get('/roles', [UsuarioWebController::class, 'roles'])->name('roles.index');
+        Route::get('/clientes', [ClienteWeb::class, 'view'])->name('clientes.index');
+        Route::get('/sub-branches/{subBranch}/floors', [FloorWeb::class, 'view'])->name('habitaciones.index');
+        Route::get('/floors/{floor}/rooms', [RoomWeb::class, 'view'])->name('rooms.index');
+        Route::get('/horarios', [HorarioWeb::class, 'view'])->name('horarios.index');
+        Route::get('/pisos', [PisoWeb::class, 'view'])->name('pisos.index');
+        Route::get('/tipos-habitaciones', [TipoHabitacionWeb::class, 'view'])->name('tipos-habitaciones.index');
+        Route::get('/uso-habitaciones', [UsoHabitacionWeb::class, 'view'])->name('uso-habitaciones.index');
+        Route::get('/categorias', [CategoriaWeb::class, 'view'])->name('categorias.index');
+        Route::get('/productos', [ProductoWeb::class, 'view'])->name('productos.index');
+        Route::get('/configuracion', [SystemSettingWeb::class, 'view'])->name('configuracion.index');
+        Route::get('/sucursales', [BranchWeb::class, 'view'])->name('sucursales.index');
+    });
+
+    #ROOM TYPE => BACKEND
+    Route::prefix('room-types')->group(function () {
+        Route::get('/', [RoomTypeController::class, 'index'])->name('branches.index');
+    });
+    #CONSULTAS DE DNI => BACKEND
+    Route::get('/consulta/{dni}', [ConsultasDni::class, 'consultar'])->name('consultar.dni');
+
+    #FLOORS => BACKEND
+    Route::apiResource('floors', FloorController::class);
+    Route::prefix('floors')->controller(FloorController::class)->group(function () {
+        Route::get('with-room-counts/index', 'withRoomCounts')->name('floors.with-room-counts');
+    });
+    Route::get('sub-branches/{sub_branch}/floors', [FloorController::class, 'bySubBranch'])
+        ->name('sub-branches.floors');
+
+        #BRANCHES => BACKEND
+    Route::prefix('branches')->group(function () {
+        Route::get('/', [BranchController::class, 'index'])->name('branches.index');
+        Route::post('/', [BranchController::class, 'store'])->name('branches.store');
+        Route::get('/{branch}', [BranchController::class, 'show'])->name('branches.show');
+        Route::put('/{branch}', [BranchController::class, 'update'])->name('branches.update');
+        Route::delete('/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
+    });
+
+    #SUB BRANCH => BACKEND
+    Route::prefix('sub-branches')->group(function () {
+        Route::get('/{id}', [SubBranchController::class, 'index']);
+        Route::post('/', [SubBranchController::class, 'store']);
+    });
+    
+    Route::prefix('rooms')->controller(RoomController::class)->group(function () {
+        Route::apiResource('/', RoomController::class)
+            ->parameters(['' => 'room']);
+        Route::patch('{room}/status', 'changeStatus')->name('rooms.change-status');
+        Route::get('{room}/status-logs', 'statusLogs')->name('rooms.status-logs');
+        Route::get('stats/general', 'stats')->name('rooms.stats');
+        Route::get('available/search', 'availableRooms')->name('rooms.available');
+        Route::get('search/advanced', 'advancedSearch')->name('rooms.advanced-search');
+        Route::get('with-stats/index', 'indexWithStats')->name('rooms.index-with-stats');
+    });
+
+
+    Route::prefix('system-settings')->group(function () {
+        Route::get('/', [SystemSettingController::class, 'index'])
+            ->name('index');
+        Route::get('/{key}', [SystemSettingController::class, 'show'])
+            ->name('show');
+        Route::put('/{setting}', [SystemSettingController::class, 'update'])
+            ->name('update');
+    });
 
     #CLIENTES -> CLIENTES
     Route::prefix('cliente')->group(function () {

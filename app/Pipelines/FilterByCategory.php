@@ -9,7 +9,7 @@ class FilterByCategory
 {
     protected $category;
 
-    public function __construct($category)
+    public function __construct(?string $category)
     {
         $this->category = $category;
     }
@@ -18,7 +18,7 @@ class FilterByCategory
     {
         if ($this->category) {
             $request->whereHas('category', function (Builder $query) {
-                $query->where('nombre', 'ILIKE', '%' . $this->category . '%');
+                $query->where('name', 'ILIKE', '%' . $this->category . '%');
             });
         }
 

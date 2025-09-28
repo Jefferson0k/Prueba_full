@@ -2,76 +2,179 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 
 class PermissionSeeder extends Seeder{
-    /**
-     * Run the database seeds.
-     */
     public function run(): void{
-        #Cliente
-        Permission::create(['name' => 'crear cliente']);
-        Permission::create(['name' => 'editar cliente']);
-        Permission::create(['name' => 'eliminar cliente']);
-        Permission::create(['name' => 'ver cliente']);
-        #Habitacion
-        Permission::create(['name' => 'crear habitacion']);
-        Permission::create(['name' => 'editar habitacion']);
-        Permission::create(['name' => 'eliminar habitacion']);
-        Permission::create(['name' => 'ver habitacion']);
-        #Horario
-        Permission::create(['name' => 'crear horario']);
-        Permission::create(['name' => 'editar horario']);
-        Permission::create(['name' => 'eliminar horario']);
-        Permission::create(['name' => 'ver horario']);
-        #Pisos
-        Permission::create(['name' => 'crear piso']);
-        Permission::create(['name' => 'editar piso']);
-        Permission::create(['name' => 'eliminar piso']);
-        Permission::create(['name' => 'ver piso']);
-        #Tipo de habitacion
-        Permission::create(['name' => 'crear tipo habitacion']);
-        Permission::create(['name' => 'editar tipo habitacion']);
-        Permission::create(['name' => 'eliminar tipo habitacion']);
-        Permission::create(['name' => 'ver tipo habitacion']);
-        #Uso de la habitacion
-        Permission::create(['name' => 'crear uso habitacion']);
-        Permission::create(['name' => 'editar uso habitacion']);
-        Permission::create(['name' => 'eliminar uso habitacion']);
-        Permission::create(['name' => 'ver uso habitacion']);
-        #Inicio del inventario
-        #Categorias
+
+        #=============================
+        #FLOOR
+        #=============================
+        Permission::create(['name' => 'create floors']);
+        Permission::create(['name' => 'update floors']);
+        Permission::create(['name' => 'delete floors']);
+        Permission::create(['name' => 'view floors']);
+        
+        # ============================
+        # CUSTOMERS
+        # ============================
+        Permission::create(['name' => 'create customers']);
+        Permission::create(['name' => 'update customers']);
+        Permission::create(['name' => 'delete customers']);
+        Permission::create(['name' => 'view customers']);
+        Permission::create(['name' => 'restore customers']);
+        Permission::create(['name' => 'force delete customers']);
+
+        # ============================
+        # INVENTORY (SUB_BRANCH_PRODUCTS)
+        # ============================
+        Permission::create(['name' => 'create inventory']);
+        Permission::create(['name' => 'update inventory']);
+        Permission::create(['name' => 'delete inventory']);
+        Permission::create(['name' => 'view inventory']);
+        Permission::create(['name' => 'adjust stock']);
+        Permission::create(['name' => 'transfer stock']);
+        Permission::create(['name' => 'view low stock']);
+
+        # ============================
+        # SALES
+        # ============================
+        Permission::create(['name' => 'create sales']);
+        Permission::create(['name' => 'update sales']);
+        Permission::create(['name' => 'delete sales']);
+        Permission::create(['name' => 'view sales']);
+        Permission::create(['name' => 'cancel sales']);
+        Permission::create(['name' => 'view all sales']);
+        Permission::create(['name' => 'update all sales']);
+        Permission::create(['name' => 'delete all sales']);
+        Permission::create(['name' => 'cancel all sales']);
+        Permission::create(['name' => 'print sales']);
+
+        # ============================
+        # SALE DETAILS
+        # ============================
+        Permission::create(['name' => 'create sale details']);
+        Permission::create(['name' => 'update sale details']);
+        Permission::create(['name' => 'delete sale details']);
+        Permission::create(['name' => 'view sale details']);
+
+        # ============================
+        # KARDEX
+        # ============================
+        Permission::create(['name' => 'create kardex entries']);
+        Permission::create(['name' => 'update kardex entries']);
+        Permission::create(['name' => 'delete kardex entries']);
+        Permission::create(['name' => 'view kardex']);
+        Permission::create(['name' => 'export kardex']);
+        Permission::create(['name' => 'view kardex reports']);
+
+        #===========================
+        # CATEGORIAS
+        #===========================
+        Permission::create(['name' => 'ver categorias']);
         Permission::create(['name' => 'crear categorias']);
         Permission::create(['name' => 'editar categorias']);
         Permission::create(['name' => 'eliminar categorias']);
-        Permission::create(['name' => 'ver categorias']);
-        #Productos
-        Permission::create(['name' => 'crear productos']);
-        Permission::create(['name' => 'editar productos']);
-        Permission::create(['name' => 'eliminar productos']);
-        Permission::create(['name' => 'ver productos']);
-        #Inventario
-        Permission::create(['name' => 'crear inventario']);
-        Permission::create(['name' => 'editar inventario']);
-        Permission::create(['name' => 'eliminar inventario']);
-        Permission::create(['name' => 'ver inventario']);
-        #Fin del inventario
-        #User
+        
+        # ============================
+        # PRODUCTS
+        # ============================
+        Permission::create(['name' => 'create products']);
+        Permission::create(['name' => 'update products']);
+        Permission::create(['name' => 'update own products']);
+        Permission::create(['name' => 'delete products']);
+        Permission::create(['name' => 'delete own products']);
+        Permission::create(['name' => 'view products']);
+        Permission::create(['name' => 'restore products']);
+        Permission::create(['name' => 'force delete products']);
+        Permission::create(['name' => 'manage products']);
+
+        # ============================
+        # ROOMS
+        # ============================
+        Permission::create(['name' => 'create rooms']);
+        Permission::create(['name' => 'update rooms']);
+        Permission::create(['name' => 'delete rooms']);
+        Permission::create(['name' => 'view rooms']);
+        Permission::create(['name' => 'change room status']);
+        Permission::create(['name' => 'update branch rooms']);
+
+        # ============================
+        # BOOKINGS
+        # ============================
+        Permission::create(['name' => 'create bookings']);
+        Permission::create(['name' => 'update bookings']);
+        Permission::create(['name' => 'delete bookings']);
+        Permission::create(['name' => 'view bookings']);
+        Permission::create(['name' => 'update own bookings']);
+        Permission::create(['name' => 'cancel bookings']);
+        Permission::create(['name' => 'cancel own bookings']);
+        Permission::create(['name' => 'checkin bookings']);
+        Permission::create(['name' => 'checkout bookings']);
+        Permission::create(['name' => 'add booking consumptions']);
+
+        # ============================
+        # PAYMENTS
+        # ============================
+        Permission::create(['name' => 'create payments']);
+        Permission::create(['name' => 'update payments']);
+        Permission::create(['name' => 'delete payments']);
+        Permission::create(['name' => 'view payments']);
+        Permission::create(['name' => 'refund payments']);
+        Permission::create(['name' => 'process payments']);
+
+        # ============================
+        # BRANCHES
+        # ============================
+        Permission::create(['name' => 'create branches']);
+        Permission::create(['name' => 'update branches']);
+        Permission::create(['name' => 'update own branches']);
+        Permission::create(['name' => 'delete branches']);
+        Permission::create(['name' => 'view branches']);
+        Permission::create(['name' => 'manage branches']);
+
+        # ============================
+        # SUB BRANCHES
+        # ============================
+        Permission::create(['name' => 'create sub branches']);
+        Permission::create(['name' => 'update sub branches']);
+        Permission::create(['name' => 'update own sub branches']);
+        Permission::create(['name' => 'delete sub branches']);
+        Permission::create(['name' => 'view sub branches']);
+        Permission::create(['name' => 'manage sub branches']);
+
+        # ============================
+        # SYSTEM SETTINGS
+        # ============================
+        Permission::create(['name' => 'view system settings']);
+        Permission::create(['name' => 'view public settings']);
+        Permission::create(['name' => 'create system settings']);
+        Permission::create(['name' => 'update system settings']);
+        Permission::create(['name' => 'delete system settings']);
+
+        # ============================
+        # USERS
+        # ============================
         Permission::create(['name' => 'crear usuarios']);
         Permission::create(['name' => 'editar usuarios']);
         Permission::create(['name' => 'eliminar usuarios']);
         Permission::create(['name' => 'ver usuarios']);
-        # Roles
-        Permission::create(['name' =>'crear roles']);
-        Permission::create(['name' =>'editar roles']);
-        Permission::create(['name' =>'eliminar roles']);
-        Permission::create(['name' =>'ver roles']);
-        # Permisos
-        Permission::create(['name' =>'crear permisos']);
-        Permission::create(['name' =>'editar permisos']);
-        Permission::create(['name' =>'eliminar permisos']);
-        Permission::create(['name' =>'ver permisos']);
+
+        # ============================
+        # ROLES
+        # ============================
+        Permission::create(['name' => 'crear roles']);
+        Permission::create(['name' => 'editar roles']);
+        Permission::create(['name' => 'eliminar roles']);
+        Permission::create(['name' => 'ver roles']);
+
+        # ============================
+        # PERMISSIONS
+        # ============================
+        Permission::create(['name' => 'crear permisos']);
+        Permission::create(['name' => 'editar permisos']);
+        Permission::create(['name' => 'eliminar permisos']);
+        Permission::create(['name' => 'ver permisos']);
     }
 }

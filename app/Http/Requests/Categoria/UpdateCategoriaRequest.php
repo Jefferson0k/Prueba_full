@@ -4,29 +4,37 @@ namespace App\Http\Requests\Categoria;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateCategoriaRequest extends FormRequest{
-    public function authorize(): bool{
+class UpdateCategoriaRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
         return true;
     }
-    public function prepareForValidation(): void{
+
+    public function prepareForValidation(): void
+    {
         $this->merge([
-            'nombre' => strtolower($this->input('nombre')),
+            'name' => strtolower($this->input('name')),
         ]);
     }
-    public function rules(): array{
+
+    public function rules(): array
+    {
         return [
-            'nombre' => 'required|string|max:100',
-            'estado' => ['required', 'boolean'],
+            'name' => 'required|string|max:100',
+            'is_active' => ['required', 'boolean'],
         ];
     }
-    public function messages(): array{
-        return [
-            'nombre.required' => 'El nombre es obligatorio.',
-            'nombre.string' => 'El nombre debe ser una cadena de texto.',
-            'estado.max' => 'El nombre no puede tener más de 100 caracteres.',
 
-            'estado.required' => 'El estado es obligatorio.',
-            'estado.boolean' => 'El estado debe ser verdadero o falso.',
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string'   => 'El nombre debe ser una cadena de texto.',
+            'name.max'      => 'El nombre no puede tener más de 100 caracteres.',
+
+            'is_active.required' => 'El estado es obligatorio.',
+            'is_active.boolean'  => 'El estado debe ser verdadero o falso.',
         ];
     }
 }
