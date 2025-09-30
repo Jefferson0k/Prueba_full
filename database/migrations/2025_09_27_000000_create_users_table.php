@@ -23,9 +23,18 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->integer('restablecimiento');
+            
+            // Relación con sub_branch
+            $table->uuid('sub_branch_id')->nullable();
+            $table->foreign('sub_branch_id')
+                ->references('id')
+                ->on('sub_branches')
+                ->cascadeOnDelete();
+            
             $table->rememberToken();
             $table->timestamps();
         });
+
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

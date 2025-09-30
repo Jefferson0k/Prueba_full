@@ -5,7 +5,7 @@
         </template>
     </Toolbar>
 
-    <Dialog v-model:visible="productoDialog" :style="{ width: '800px' }" header="Registro de productos" :modal="true">
+    <Dialog v-model:visible="productoDialog" :style="{ width: '900px' }" header="Registro de productos" :modal="true">
         <div class="flex flex-col gap-6">
             <div class="grid grid-cols-12 gap-4">
                 <!-- Nombre y Estado en una sola fila -->
@@ -62,6 +62,36 @@
                     <small v-else-if="serverErrors.unit_type" class="text-red-500">{{ serverErrors.unit_type[0] }}</small>
                 </div>
 
+                <!-- Es Fraccionable y Unidades de Fracción -->
+                <div class="col-span-12 grid grid-cols-12 gap-4">
+                    <!-- Es Fraccionable -->
+                    <div class="col-span-6">
+                        <label class="block font-bold mb-2">¿Es Fraccionable?</label>
+                        <div class="flex items-center gap-2">
+                            <Checkbox v-model="producto.is_fractionable" :binary="true" />
+                            <Tag :value="producto.is_fractionable ? 'Sí' : 'No'" :severity="producto.is_fractionable ? 'info' : 'secondary'" />
+                        </div>
+                        <small class="text-gray-600">Indica si el producto puede venderse en fracciones</small>
+                        <small v-if="serverErrors.is_fractionable" class="text-red-500 block">{{ serverErrors.is_fractionable[0] }}</small>
+                    </div>
+
+                    <!-- Unidades de Fracción -->
+                    <div class="col-span-6" v-show="producto.is_fractionable">
+                        <label class="block font-bold mb-2">Unidades por Fracción <span class="text-red-500">*</span></label>
+                        <InputText 
+                            v-model.number="producto.fraction_units" 
+                            type="number" 
+                            fluid 
+                            min="1" 
+                            step="1" 
+                            placeholder="Ej: 12 (para docena)" 
+                        />
+                        <small class="text-gray-600">Número de unidades que componen una fracción completa</small>
+                        <small v-if="submitted && producto.is_fractionable && (!producto.fraction_units || producto.fraction_units < 1)" class="text-red-500 block">Las unidades de fracción son obligatorias cuando el producto es fraccionable.</small>
+                        <small v-else-if="serverErrors.fraction_units" class="text-red-500 block">{{ serverErrors.fraction_units[0] }}</small>
+                    </div>
+                </div>
+
                 <!-- Descripción -->
                 <div class="col-span-12">
                     <label class="block font-bold mb-2">Descripción</label>
@@ -78,7 +108,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import axios from 'axios';
 import Dialog from 'primevue/dialog';
 import Toolbar from 'primevue/toolbar';
@@ -104,6 +134,8 @@ const producto = ref({
     category_id: null,
     unit_type: null,
     description: '',
+    is_fractionable: false,
+    fraction_units: null,
 });
 
 const categorias = ref([]);
@@ -116,6 +148,13 @@ const tiposUnidad = ref([
     { label: 'Litro', value: 'liter' },
 ]);
 
+// Watch para limpiar fraction_units cuando is_fractionable es false
+watch(() => producto.value.is_fractionable, (newValue) => {
+    if (!newValue) {
+        producto.value.fraction_units = null;
+    }
+});
+
 function resetProducto() {
     producto.value = {
         name: '',
@@ -125,6 +164,8 @@ function resetProducto() {
         category_id: null,
         unit_type: null,
         description: '',
+        is_fractionable: false,
+        fraction_units: null,
     };
     serverErrors.value = {};
     submitted.value = false;
@@ -150,19 +191,85 @@ async function fetchCategorias() {
     }
 }
 
+function validateForm() {
+    const errors = [];
+    
+    // Validaciones básicas
+    if (!producto.value.name || producto.value.name.length < 2) {
+        errors.push('El nombre es obligatorio y debe tener al menos 2 caracteres');
+    }
+    
+    if (producto.value.purchase_price === null || producto.value.purchase_price === '') {
+        errors.push('El precio de compra es obligatorio');
+    }
+    
+    if (producto.value.sale_price === null || producto.value.sale_price === '') {
+        errors.push('El precio de venta es obligatorio');
+    }
+    
+    if (!producto.value.category_id) {
+        errors.push('La categoría es obligatoria');
+    }
+    
+    if (!producto.value.unit_type) {
+        errors.push('El tipo de unidad es obligatorio');
+    }
+    
+    // Validación específica para productos fraccionables
+    if (producto.value.is_fractionable && (!producto.value.fraction_units || producto.value.fraction_units < 1)) {
+        errors.push('Las unidades de fracción son obligatorias cuando el producto es fraccionable');
+    }
+    
+    return errors;
+}
+
 function guardarProducto() {
     submitted.value = true;
     serverErrors.value = {};
 
-    axios.post('/producto', producto.value)
+    // Validación del lado del cliente
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Validación',
+            detail: validationErrors[0],
+            life: 3000
+        });
+        return;
+    }
+
+    // Preparar datos para envío
+    const dataToSend = { ...producto.value };
+    
+    // Si no es fraccionable, asegurar que fraction_units sea null
+    if (!dataToSend.is_fractionable) {
+        dataToSend.fraction_units = null;
+    }
+
+    axios.post('/producto', dataToSend)
         .then(() => {
-            toast.add({ severity: 'success', summary: 'Éxito', detail: 'Producto registrado', life: 3000 });
+            toast.add({ 
+                severity: 'success', 
+                summary: 'Éxito', 
+                detail: 'Producto registrado correctamente', 
+                life: 3000 
+            });
             hideDialog();
             emit('producto-agregado');
         })
         .catch(error => {
             if (error.response?.status === 422) {
                 serverErrors.value = error.response.data.errors || {};
+                const firstError = Object.values(serverErrors.value)[0];
+                if (firstError && Array.isArray(firstError)) {
+                    toast.add({
+                        severity: 'warn',
+                        summary: 'Error de validación',
+                        detail: firstError[0],
+                        life: 3000
+                    });
+                }
             } else {
                 toast.add({
                     severity: 'error',

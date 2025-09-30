@@ -7,81 +7,64 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SubBranchProduct extends Model
-{
+class SubBranchProduct extends Model{
     use HasFactory, HasUuids, SoftDeletes;
-
     protected $fillable = [
         'sub_branch_id',
         'product_id',
+        'packages_in_stock',
+        'units_per_package',
         'current_stock',
         'min_stock',
         'max_stock',
-        'custom_sale_price',
+        'is_fractionable',
         'is_active',
         'created_by',
         'updated_by',
         'deleted_by',
     ];
-
     protected $casts = [
+        'packages_in_stock' => 'integer',
+        'units_per_package' => 'integer',
         'current_stock' => 'integer',
         'min_stock' => 'integer',
         'max_stock' => 'integer',
-        'custom_sale_price' => 'decimal:2',
+        'is_fractionable' => 'boolean',
         'is_active' => 'boolean',
     ];
-
-    // Relaciones
-    public function subBranch()
-    {
+    public function subBranch(){
         return $this->belongsTo(SubBranch::class);
     }
-
-    public function product()
-    {
+    public function product(){
         return $this->belongsTo(Product::class);
     }
-
-    public function createdBy()
-    {
+    public function createdBy(){
         return $this->belongsTo(User::class, 'created_by');
     }
-
-    public function updatedBy()
-    {
+    public function updatedBy(){
         return $this->belongsTo(User::class, 'updated_by');
     }
-
-    public function deletedBy()
-    {
+    public function deletedBy(){
         return $this->belongsTo(User::class, 'deleted_by');
     }
-
     // Scopes
-    public function scopeActive($query)
-    {
+    public function scopeActive($query){
         return $query->where('is_active', true);
     }
-
-    public function scopeLowStock($query)
-    {
+    public function scopeLowStock($query){
         return $query->whereRaw('current_stock <= min_stock');
     }
-
-    public function scopeBySubBranch($query, $subBranchId)
-    {
+    public function scopeBySubBranch($query, $subBranchId){
         return $query->where('sub_branch_id', $subBranchId);
     }
-
-    // Métodos auxiliares
-    public function getFinalSalePrice()
-    {
-        return $this->custom_sale_price ?? $this->product->sale_price;
+    public function calculateCurrentStock(): int{
+        return ($this->packages_in_stock * $this->units_per_package);
     }
-
-    public function isLowStock()
-    {
+    public function updateCurrentStock(): void{
+        $this->current_stock = $this->calculateCurrentStock();
+        $this->save();
+    }
+    public function isLowStock(): bool{
         return $this->current_stock <= $this->min_stock;
     }
 }

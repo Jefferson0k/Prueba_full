@@ -75,7 +75,7 @@ const model = computed(() => [
     {
         label: 'Movimientos',
         items: [
-            hasPermission('view movements') && { label: 'Todos los Movimientos', icon: 'pi pi-fw pi-history', to: '/panel/movimientos' },
+            hasPermission('view movimiento') && { label: 'Todos los Movimientos', icon: 'pi pi-fw pi-history', to: '/panel/movimientos' },
             hasPermission('view movements') && { label: 'Entradas', icon: 'pi pi-fw pi-arrow-down', to: '/panel/movimientos/entradas' },
             hasPermission('view movements') && { label: 'Salidas', icon: 'pi pi-fw pi-arrow-up', to: '/panel/movimientos/salidas' },
             hasPermission('create movements') && { label: 'Nuevo Movimiento', icon: 'pi pi-fw pi-plus-circle', to: '/panel/movimientos/nuevo' },

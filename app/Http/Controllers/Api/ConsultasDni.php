@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Gate;
 
 class ConsultasDni extends Controller{
     public function consultar($dni = null,Cliente $cliente){
-        Gate::authorize('view', $cliente);
+        //Gate::authorize('view', $cliente);
         if (empty($dni)) {
             return response()->json(['error' => 'Debe proporcionar un DNI válido'], 400);
         }

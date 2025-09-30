@@ -17,13 +17,15 @@ return new class extends Migration
             $table->uuid('product_id');
             
             // Stock actual en esta sub-sucursal
-            $table->integer('current_stock')->default(0);
+            $table->integer('packages_in_stock')->default(0); // cantidad de packs/cajas
+            $table->integer('units_per_package')->default(0); // unidades por pack
+            $table->integer('current_stock')->default(0);     // total de unidades
             $table->integer('min_stock')->default(0);
             $table->integer('max_stock')->default(0);
             
-            // Precios específicos por sub-sucursal (opcional)
-            $table->decimal('custom_sale_price', 10, 2)->nullable();
-            
+            // Fraccionable o no
+            $table->boolean('is_fractionable')->default(false);
+
             $table->boolean('is_active')->default(true);
             
             // Auditoría
@@ -46,6 +48,7 @@ return new class extends Migration
             $table->index(['sub_branch_id', 'is_active', 'deleted_at']);
             $table->index(['product_id', 'is_active', 'deleted_at']);
             $table->index('current_stock');
+            $table->index('packages_in_stock');
             $table->index('created_by');
             $table->index('updated_by');
         });

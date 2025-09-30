@@ -3,6 +3,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Provider;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder{
@@ -23,6 +24,7 @@ class DatabaseSeeder extends Seeder{
             SystemSettingSeeder::class, // Configuraciones generales
             CurrencySeeder::class,      // Monedas disponibles
             RateTypeSeeder::class,      // Tipos de tarifa (hora, día, noche)
+            ProviderSeeder::class,    // Proveedores
         ]);
 
         // Estructura de hotel

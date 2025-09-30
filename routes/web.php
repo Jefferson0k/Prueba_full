@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\UsoHabitacionController;
 use App\Http\Controllers\Api\UsuariosController;
 use App\Http\Controllers\Panel\BranchController;
 use App\Http\Controllers\Panel\FloorController;
+use App\Http\Controllers\Panel\MovementsController;
+use App\Http\Controllers\Panel\ProviderController;
 use App\Http\Controllers\Panel\RoomController;
 use App\Http\Controllers\Panel\RoomTypeController;
 use App\Http\Controllers\Panel\SubBranchController;
@@ -23,6 +25,8 @@ use App\Http\Controllers\Web\Categoria\CategoriaWeb;
 use App\Http\Controllers\Web\Cliente\ClienteWeb;
 use App\Http\Controllers\Web\Floor\FloorWeb;
 use App\Http\Controllers\Web\Horario\HorarioWeb;
+use App\Http\Controllers\Web\DetailsMovements\DetailsMovementsWeb;
+use App\Http\Controllers\Web\Movements\MovementsWeb;
 use App\Http\Controllers\Web\Piso\PisoWeb;
 use App\Http\Controllers\Web\Producto\ProductoWeb;
 use App\Http\Controllers\Web\Room\RoomWeb;
@@ -49,6 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     # VISTAS DEL FRONTEND
     Route::prefix('panel')->group(function () {
+        Route::get('/movimientos', [MovementsWeb::class,'view'])->name('movimientos.view');
         Route::get('/branches/{id}/sub-branches', [SubBranchWeb::class,'view'])->name('branches.subbranches.view');
         Route::get('/usuario', [UsuarioWebController::class,'index'])->name('usuario.index');
         Route::get('/roles', [UsuarioWebController::class, 'roles'])->name('roles.index');
@@ -63,12 +68,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/productos', [ProductoWeb::class, 'view'])->name('productos.index');
         Route::get('/configuracion', [SystemSettingWeb::class, 'view'])->name('configuracion.index');
         Route::get('/sucursales', [BranchWeb::class, 'view'])->name('sucursales.index');
+        Route::get('/movimientos/{movement_id}', [DetailsMovementsWeb::class, 'view'])
+            ->name('movimientos.details.view');
+    });
+
+
+    #PROVIDERS => BACKEND
+    Route::prefix('providers')->group(function () {
+        Route::get('/', [ProviderController::class, 'index']);
+    });
+    #MOVEMENTS => BACKEND
+    Route::prefix('movements')->group(function () {
+        Route::get('/', [MovementsController::class, 'index'])->name('movements.index');
+        Route::post('/', [MovementsController::class, 'store'])->name('movements.store');
+        Route::get('/{movement}', [MovementsController::class, 'show'])->name('movements.show');
+        Route::put('/{movement}', [MovementsController::class, 'update'])->name('movements.update');
+        Route::patch('/{movement}', [MovementsController::class, 'update']);
+        Route::delete('/{movement}', [MovementsController::class, 'destroy'])->name('movements.destroy');
     });
 
     #ROOM TYPE => BACKEND
     Route::prefix('room-types')->group(function () {
         Route::get('/', [RoomTypeController::class, 'index'])->name('branches.index');
     });
+
     #CONSULTAS DE DNI => BACKEND
     Route::get('/consulta/{dni}', [ConsultasDni::class, 'consultar'])->name('consultar.dni');
 

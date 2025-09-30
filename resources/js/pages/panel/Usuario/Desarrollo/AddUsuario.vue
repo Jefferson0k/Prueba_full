@@ -60,9 +60,10 @@
                 <div class="col-span-6">
                     <label for="nacimiento" class="block font-bold mb-3">Fecha de nacimiento <span
                             class="text-red-500">*</span></label>
-                    <InputText v-model="usuario.nacimiento" required maxlength="100" disabled fluid />
-                    <small v-if="submitted && !usuario.nacimiento" class="text-red-500">Los apellidos son
-                        obligatorios.</small>
+                    <DatePicker v-model="usuario.nacimiento" dateFormat="dd/mm/yy" placeholder="dd/mm/aaaa" 
+                        :maxDate="maxDate" showIcon fluid />
+                    <small v-if="submitted && !usuario.nacimiento" class="text-red-500">La fecha de nacimiento es
+                        obligatoria.</small>
                     <small v-else-if="serverErrors.nacimiento" class="text-red-500">{{ serverErrors.nacimiento[0]
                     }}</small>
                 </div>
@@ -104,6 +105,23 @@
                     <small v-else-if="serverErrors.role" class="text-red-500">{{ serverErrors.role[0] }}</small>
                 </div>
             </div>
+
+            <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-6">
+                    <label for="branch" class="block font-bold mb-3">Sucursal <span class="text-red-500">*</span></label>
+                    <Select v-model="usuario.branch_id" :options="branches" optionLabel="name" optionValue="id"
+                        placeholder="Seleccione una sucursal" fluid @change="onBranchChange" />
+                    <small v-if="submitted && !usuario.branch_id" class="text-red-500">La sucursal es obligatoria.</small>
+                    <small v-else-if="serverErrors.branch_id" class="text-red-500">{{ serverErrors.branch_id[0] }}</small>
+                </div>
+                <div class="col-span-6">
+                    <label for="sub_branch" class="block font-bold mb-3">Sub-Sucursal <span class="text-red-500">*</span></label>
+                    <Select v-model="usuario.sub_branch_id" :options="subBranches" optionLabel="name" optionValue="id"
+                        placeholder="Seleccione una sub-sucursal" fluid :disabled="!usuario.branch_id" />
+                    <small v-if="submitted && !usuario.sub_branch_id" class="text-red-500">La sub-sucursal es obligatoria.</small>
+                    <small v-else-if="serverErrors.sub_branch_id" class="text-red-500">{{ serverErrors.sub_branch_id[0] }}</small>
+                </div>
+            </div>
         </div>
 
         <template #footer>
@@ -126,34 +144,95 @@ import Password from 'primevue/password';
 import { useToast } from 'primevue/usetoast';
 import { defineEmits } from 'vue';
 import Select from 'primevue/select';
+import DatePicker from 'primevue/datepicker';
 
 const toast = useToast();
 const roles = ref([]);
+const branches = ref([]);
+const subBranches = ref([]);
 const submitted = ref(false);
 const usuarioDialog = ref(false);
 const serverErrors = ref({});
+const maxDate = ref(new Date()); // Fecha máxima es hoy
 const emit = defineEmits(['usuario-agregado']);
 
 const usuario = ref({
     dni: '',
     name: '',
     apellidos: '',
-    nacimiento: '',
+    nacimiento: null,
     email: '',
     username: '',
     password: '',
     status: true,
     role_id: null,
+    branch_id: null,
+    sub_branch_id: null,
 });
 
 function openNew() {
     submitted.value = false;
     usuarioDialog.value = true;
+    // Resetear los campos del usuario
+    usuario.value = {
+        dni: '',
+        name: '',
+        apellidos: '',
+        nacimiento: null,
+        email: '',
+        username: '',
+        password: '',
+        status: true,
+        role_id: null,
+        branch_id: null,
+        sub_branch_id: null,
+    };
+    // Limpiar sub-sucursales al abrir
+    subBranches.value = [];
 }
 
 function hideDialog() {
     usuarioDialog.value = false;
     submitted.value = false;
+    // Limpiar sub-sucursales al cerrar
+    subBranches.value = [];
+}
+
+function onBranchChange() {
+    // Resetear sub-sucursal cuando cambie la sucursal
+    usuario.value.sub_branch_id = null;
+    subBranches.value = [];
+    
+    if (usuario.value.branch_id) {
+        cargarSubBranches(usuario.value.branch_id);
+    }
+}
+
+function cargarSubBranches(branchId) {
+    axios.get(`/sub-branches/${branchId}`)
+        .then(response => {
+            if (response.data.success && response.data.data) {
+                subBranches.value = response.data.data;
+            } else {
+                subBranches.value = [];
+                toast.add({ 
+                    severity: 'info', 
+                    summary: 'Información', 
+                    detail: 'No hay sub-sucursales disponibles para esta sucursal', 
+                    life: 3000 
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar sub-sucursales:', error);
+            subBranches.value = [];
+            toast.add({ 
+                severity: 'error', 
+                summary: 'Error', 
+                detail: 'No se pudieron cargar las sub-sucursales', 
+                life: 3000 
+            });
+        });
 }
 
 function consultarusuarioPorDNI() {
@@ -170,7 +249,18 @@ function consultarusuarioPorDNI() {
 
                     usuario.value.name = name;
                     usuario.value.apellidos = `${apellido_paterno} ${apellido_materno}`.trim();
-                    usuario.value.nacimiento = nacimiento;
+                    
+                    // Convertir string de fecha a objeto Date para DatePicker
+                    if (nacimiento) {
+                        const fechaParts = nacimiento.split('/');
+                        if (fechaParts.length === 3) {
+                            // Asumiendo formato dd/mm/yyyy
+                            const dia = parseInt(fechaParts[0]);
+                            const mes = parseInt(fechaParts[1]) - 1; // JavaScript months are 0-indexed
+                            const año = parseInt(fechaParts[2]);
+                            usuario.value.nacimiento = new Date(año, mes, dia);
+                        }
+                    }
 
                     usuario.value.username = generarUsername(name, apellido_paterno, apellido_materno, nacimiento);
                 } else {
@@ -196,7 +286,14 @@ function generarUsername(nombre, apellidoPaterno, apellidoMaterno, nacimiento) {
     const primeraLetraNombre = normalizar(nombre)?.charAt(0);
     const primerApellido = normalizar(apellidoPaterno)?.split(' ')[0];
     const segundoApellido = normalizar(apellidoMaterno)?.split(' ')[0]?.substring(0, 2);
-    const diaNacimiento = nacimiento?.split('/')?.[0]?.padStart(2, '0') || '00';
+    
+    // Si nacimiento es un string, extraer el día, si es Date, usar getDate()
+    let diaNacimiento = '00';
+    if (typeof nacimiento === 'string' && nacimiento.includes('/')) {
+        diaNacimiento = nacimiento.split('/')[0]?.padStart(2, '0') || '00';
+    } else if (usuario.value.nacimiento instanceof Date) {
+        diaNacimiento = usuario.value.nacimiento.getDate().toString().padStart(2, '0');
+    }
 
     return `${primeraLetraNombre}${primerApellido}${segundoApellido}${diaNacimiento}`.toUpperCase();
 }
@@ -205,7 +302,18 @@ function guardarUsuario() {
     submitted.value = true;
     serverErrors.value = {};
 
-    axios.post('/usuarios', usuario.value)
+    // Preparar los datos del usuario para enviar
+    const usuarioData = { ...usuario.value };
+    
+    // Convertir fecha a formato dd/mm/yyyy para el backend
+    if (usuarioData.nacimiento instanceof Date) {
+        const dia = usuarioData.nacimiento.getDate().toString().padStart(2, '0');
+        const mes = (usuarioData.nacimiento.getMonth() + 1).toString().padStart(2, '0');
+        const año = usuarioData.nacimiento.getFullYear();
+        usuarioData.nacimiento = `${dia}/${mes}/${año}`;
+    }
+
+    axios.post('/usuarios', usuarioData)
         .then(response => {
             toast.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario registrado', life: 3000 });
             hideDialog();
@@ -221,18 +329,38 @@ function guardarUsuario() {
                     nacimiento: errors.nacimiento,
                     correo: errors.email,
                     password: errors.password,
+                    branch_id: errors.branch_id,
+                    sub_branch_id: errors.sub_branch_id,
                 };
             }
         });
 }
 
 onMounted(() => {
+    // Cargar roles
     axios.get('/rol')
         .then(response => {
             roles.value = response.data.data;
         })
         .catch(() => {
             toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los roles', life: 3000 });
+        });
+    
+    // Cargar sucursales
+    axios.get('/branches')
+        .then(response => {
+            if (response.data.data) {
+                branches.value = response.data.data;
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar sucursales:', error);
+            toast.add({ 
+                severity: 'error', 
+                summary: 'Error', 
+                detail: 'No se pudieron cargar las sucursales', 
+                life: 3000 
+            });
         });
 });
 </script>

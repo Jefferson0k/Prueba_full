@@ -2,23 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 use Spatie\Activitylog\LogOptions;
+
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable,HasRoles,LogsActivity;
+    use HasFactory, Notifiable, HasRoles, LogsActivity;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'dni',
@@ -29,23 +23,14 @@ class User extends Authenticatable
         'password',
         'status',
         'restablecimiento',
+        'sub_branch_id', // nueva columna vinculada
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -53,16 +38,28 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public function getActivitylogOptions(): LogOptions{
+
+    public function getActivitylogOptions(): LogOptions
+    {
         return LogOptions::defaults()
             ->logOnly(['name', 'email', 'username', 'status'])
             ->useLogName('usuario')
             ->logOnlyDirty();
     }
-    public function isOnline(): bool    {
+
+    public function isOnline(): bool
+    {
         return cache()->has('user-is-online-' . $this->id);
     }
-    public function inventarios(){
+
+    // ─── Relaciones ───────────────────────────────
+    public function subBranch()
+    {
+        return $this->belongsTo(SubBranch::class);
+    }
+
+    public function inventarios()
+    {
         return $this->hasMany(Inventario::class, 'usuario_id');
     }
 }

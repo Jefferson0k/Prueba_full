@@ -1,25 +1,22 @@
-a<?php
+<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    public function up()
-    {
+return new class extends Migration{
+    public function up(){
         Schema::create('products', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('category_id');
             $table->string('code')->unique();
             $table->string('name');
             $table->text('description')->nullable();
-            
-            // Precios
             $table->decimal('purchase_price', 10, 2); // Precio de compra
             $table->decimal('sale_price', 10, 2);     // Precio de venta
-            
             $table->enum('unit_type', ['piece', 'bottle', 'pack', 'kg', 'liter']);
+            $table->boolean('is_fractionable')->default(false);
+            $table->integer('fraction_units')->nullable()->default(null);
             $table->boolean('is_active')->default(true);
             
             // Auditoría

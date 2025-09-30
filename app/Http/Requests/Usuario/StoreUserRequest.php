@@ -16,7 +16,8 @@ class StoreUserRequest extends FormRequest{
             'username' => 'required|string|max:30|unique:users,username',
             'password' => 'required|string|min:8',
             'status' => 'required|boolean',
-            'role_id' => ['required', 'exists:roles,id']
+            'role_id' => ['required', 'exists:roles,id'],
+            'sub_branch_id' => ['required', 'exists:sub_branches,id'],
         ];
     }
     public function messages(){
@@ -52,6 +53,8 @@ class StoreUserRequest extends FormRequest{
             'status.required' => 'El estado es obligatorio.',
             'status.boolean' => 'El estado debe ser verdadero o falso',
 
+            'sub_branch_id.required' => 'La sub-sucursal es obligatoria.',
+            'sub_branch_id.exists' => 'La sub-sucursal seleccionada no existe.',
         ];
     }
 }

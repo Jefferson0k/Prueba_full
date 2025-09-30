@@ -35,6 +35,11 @@ class SubBranch extends Model implements Auditable
         return $this->belongsTo(Branch::class, 'branch_id');
     }
 
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
+
     public function floors()
     {
         return $this->hasMany(Floor::class)->orderBy('floor_number');

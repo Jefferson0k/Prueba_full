@@ -12,7 +12,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('booking_code')->unique();
             $table->uuid('room_id');
-            $table->uuid('client_id');
+            $table->uuid('customers_id');
             $table->uuid('rate_type_id');
             $table->uuid('currency_id');
             $table->datetime('check_in');
@@ -40,7 +40,7 @@ return new class extends Migration
             
             // Foreign keys
             $table->foreign('room_id')->references('id')->on('rooms');
-            $table->foreign('client_id')->references('id')->on('clients');
+            $table->foreign('customers_id')->references('id')->on('customers');
             $table->foreign('rate_type_id')->references('id')->on('rate_types');
             $table->foreign('currency_id')->references('id')->on('currencies');
             
@@ -49,7 +49,7 @@ return new class extends Migration
             $table->index(['status', 'deleted_at']);
             $table->index(['check_in', 'check_out']);
             $table->index(['room_id', 'status']);
-            $table->index('client_id');
+            $table->index('customers_id');
             $table->index('created_by');
             $table->index('updated_by');
         });

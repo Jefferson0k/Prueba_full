@@ -16,6 +16,9 @@ class ProductSeeder extends Seeder{
         Product::factory(50)->make()->each(function ($product) use ($categories) {
             $product->category_id = $categories->random()->id;
             $product->sale_price = $product->purchase_price + rand(10, 200);
+            if ($product->is_fractionable && $product->fraction_units === 0) {
+                $product->fraction_units = rand(1, 24);
+            }
             $product->save();
         });
     }

@@ -14,13 +14,24 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'           => ['required', 'string', 'min:2', 'max:100'],
-            'category_id'    => ['required', 'exists:product_categories,id'],
-            'is_active'      => ['required', 'boolean'],
-            'purchase_price' => ['required', 'numeric', 'min:0'],
-            'sale_price'     => ['required', 'numeric', 'min:0'],
-            'unit_type'      => ['required', 'in:piece,bottle,pack,kg,liter'],
-            'description'    => ['nullable', 'string', 'max:1000'],
+            'name'            => ['required', 'string', 'min:2', 'max:100'],
+            'category_id'     => ['required', 'exists:product_categories,id'],
+            'is_active'       => ['required', 'boolean'],
+            'purchase_price'  => ['required', 'numeric', 'min:0'],
+            'sale_price'      => ['required', 'numeric', 'min:0'],
+            'unit_type'       => ['required', 'in:piece,bottle,pack,kg,liter'],
+            'description'     => ['nullable', 'string', 'max:1000'],
+            'is_fractionable' => ['required', 'boolean'],
+            'fraction_units' => [
+                'nullable',
+                'integer',
+                'min:1',
+                function ($attribute, $value, $fail) {
+                    if ($this->input('is_fractionable') && !$value) {
+                        $fail('Fraction units are required when product is fractionable.');
+                    }
+                },
+            ],
         ];
     }
 
@@ -44,6 +55,10 @@ class StoreProductRequest extends FormRequest
             'unit_type.in'            => 'Selected unit type is invalid.',
             'description.string'      => 'Description must be a string.',
             'description.max'         => 'Description must not exceed 1000 characters.',
+            'is_fractionable.required'=> 'Fractionable status is required.',
+            'fraction_units.required_if' => 'Fraction units are required when product is fractionable.',
+            'fraction_units.integer'  => 'Fraction units must be an integer.',
+            'fraction_units.min'      => 'Fraction units must be at least 1.',
         ];
     }
 }

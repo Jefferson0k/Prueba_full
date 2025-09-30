@@ -9,6 +9,22 @@ class PermissionSeeder extends Seeder{
     public function run(): void{
 
         #=============================
+        #MOVEMENT DETAIL
+        #=============================
+        Permission::create(['name' => 'create movimiento detalle']);
+        Permission::create(['name' => 'update movimiento detalle']);
+        Permission::create(['name' => 'delete movimiento detalle']);
+        Permission::create(['name' => 'view movimiento detalle']);
+
+        #=============================
+        #MOVEMENT
+        #=============================
+        Permission::create(['name' => 'create movimiento']);
+        Permission::create(['name' => 'update movimiento']);
+        Permission::create(['name' => 'delete movimiento']);
+        Permission::create(['name' => 'view movimiento']);
+
+        #=============================
         #FLOOR
         #=============================
         Permission::create(['name' => 'create floors']);

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Panel;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SubBranch\StoreSubBranchRequest;
 use App\Http\Resources\SubBranch\SubBranchResource;
-use App\Models\Product;
+use App\Jobs\CreateSubBranchProducts;
 use App\Models\SubBranch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
@@ -60,35 +60,26 @@ class SubBranchController extends Controller{
             $data = $request->validated();
             $data['created_by'] = Auth::id();
             $subBranch = SubBranch::create($data);
-            $allProducts = Product::all();
-            foreach ($allProducts as $product) {
-                $subBranch->subBranchProducts()->create([
-                    'product_id' => $product->id,
-                    'current_stock' => 0,
-                    'min_stock' => 0,
-                    'max_stock' => 100,
-                    'custom_sale_price' => null,
-                    'is_active' => $product->is_active,
-                    'created_by' => Auth::id(),
-                ]);
-            }
+            CreateSubBranchProducts::dispatchSync($subBranch);
             DB::commit();
             $subBranch->load('subBranchProducts.product');
             return response()->json([
-                'message' => 'Sub-sucursal creada correctamente con ' . count($allProducts) . ' productos asignados.',
-                'data' => new SubBranchResource($subBranch)
+                'state'   => true,
+                'message' => 'Sub-sucursal creada correctamente. La asignación de productos se está procesando en segundo plano.',
+                'data'    => new SubBranchResource($subBranch)
             ], 201);
         } catch (AuthorizationException $e) {
             DB::rollBack();
             return response()->json([
+                'state'   => false,
                 'message' => 'No tienes permiso para crear una sub-sucursal.'
             ], 403);
-            
         } catch (Throwable $e) {
             DB::rollBack();
             return response()->json([
+                'state'   => false,
                 'message' => 'Error al crear la sub-sucursal.',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }

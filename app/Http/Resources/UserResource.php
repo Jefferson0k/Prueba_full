@@ -18,6 +18,8 @@ class UserResource extends JsonResource{
             'nacimiento' => Carbon::parse($this->nacimiento)->format('d-m-Y'),
             'email' => $this->email,
             'username' => $this->username,
+            'sub_branch' => $this->subBranch ? $this->subBranch->name : null,
+            'sub_branch_id' => $this->sub_branch_id,
             'status' => $this->status,
             'online' => cache()->has('user-is-online-' . $this->id),
             'creacion' => Carbon::parse($this->created_at)->format('d-m-Y H:i:s A'),

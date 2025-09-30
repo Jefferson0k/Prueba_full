@@ -159,6 +159,17 @@ onMounted(loadProductos);
         <Column field="precio_venta" header="Precio Venta" sortable style="min-width: 10rem" />
         <Column field="unidad" header="Unidad" sortable style="min-width: 5rem" />
         <Column field="Categoria_nombre" header="Categoría" sortable style="min-width: 10rem" />
+        <Column field="is_fractionable" header="Fraccionable" sortable style="min-width: 8rem">
+            <template #body="{ data }">
+                <Tag :value="data.is_fractionable ? 'Sí' : 'No'" :severity="data.is_fractionable ? 'success' : 'danger'" />
+            </template>
+        </Column>
+
+        <Column field="fraction_units" header="Unidades por paquete" sortable style="min-width: 13rem">
+            <template #body="{ data }">
+                <div>{{ data.is_fractionable ? data.fraction_units : '-' }}</div>
+            </template>
+        </Column>
         <Column field="creacion" header="Creación" sortable style="min-width: 13rem" />
         <Column field="actualizacion" header="Actualización" sortable style="min-width: 13rem" />
         <Column field="estado" header="Estado" sortable>

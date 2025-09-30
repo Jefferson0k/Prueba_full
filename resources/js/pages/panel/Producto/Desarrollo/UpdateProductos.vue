@@ -33,7 +33,9 @@ const producto = ref({
     purchase_price: null,
     sale_price: null,
     unit_type: null,
-    description: ''
+    description: '',
+    is_fractionable: false,
+    fraction_units: null,
 });
 
 const categorias = ref([]);
@@ -66,7 +68,9 @@ const fetchProducto = async () => {
             purchase_price: parseFloat(p.purchase_price || p.precio_compra),
             sale_price: parseFloat(p.sale_price || p.precio_venta),
             unit_type: p.unit_type || p.unidad,
-            description: p.description || p.descripcion || ''
+            description: p.description || p.descripcion || '',
+            is_fractionable: p.is_fractionable || false,
+            fraction_units: p.fraction_units || null
         };
     } catch {
         toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el producto', life: 3000 });
@@ -84,12 +88,27 @@ const fetchCategorias = async () => {
     }
 };
 
+// Watch para limpiar fraction_units cuando is_fractionable es false
+watch(() => producto.value.is_fractionable, (newValue) => {
+    if (!newValue) {
+        producto.value.fraction_units = null;
+    }
+});
+
 const updateProducto = async () => {
     submitted.value = true;
     serverErrors.value = {};
 
+    // Preparar datos para envío
+    const dataToSend = { ...producto.value };
+    
+    // Si no es fraccionable, asegurar que fraction_units sea null
+    if (!dataToSend.is_fractionable) {
+        dataToSend.fraction_units = null;
+    }
+
     try {
-        await axios.put(`/producto/${props.productoId}`, { ...producto.value });
+        await axios.put(`/producto/${props.productoId}`, dataToSend);
 
         toast.add({
             severity: 'success',
@@ -123,7 +142,7 @@ const updateProducto = async () => {
 
 <template>
     <Dialog v-model:visible="dialogVisible" header="Editar Producto" modal :closable="true" :closeOnEscape="true"
-        :style="{ width: '800px' }">
+        :style="{ width: '900px' }">
         <div class="flex flex-col gap-6">
             <div class="grid grid-cols-12 gap-4">
                 <!-- Nombre y Estado en una sola fila -->
@@ -181,6 +200,36 @@ const updateProducto = async () => {
                         placeholder="Seleccione tipo de unidad" fluid
                         :class="{ 'p-invalid': submitted && serverErrors.unit_type }" />
                     <small v-if="serverErrors.unit_type" class="text-red-500">{{ serverErrors.unit_type[0] }}</small>
+                </div>
+
+                <!-- Es Fraccionable y Unidades de Fracción -->
+                <div class="col-span-12 grid grid-cols-12 gap-4">
+                    <!-- Es Fraccionable -->
+                    <div class="col-span-6">
+                        <label class="block font-bold mb-2">¿Es Fraccionable?</label>
+                        <div class="flex items-center gap-2">
+                            <Checkbox v-model="producto.is_fractionable" :binary="true" />
+                            <Tag :value="producto.is_fractionable ? 'Sí' : 'No'" :severity="producto.is_fractionable ? 'info' : 'secondary'" />
+                        </div>
+                        <small class="text-gray-600">Indica si el producto puede venderse en fracciones</small>
+                        <small v-if="serverErrors.is_fractionable" class="text-red-500 block">{{ serverErrors.is_fractionable[0] }}</small>
+                    </div>
+
+                    <!-- Unidades de Fracción -->
+                    <div class="col-span-6" v-show="producto.is_fractionable">
+                        <label class="block font-bold mb-2">Unidades por Fracción <span class="text-red-500">*</span></label>
+                        <InputNumber 
+                            v-model="producto.fraction_units" 
+                            fluid 
+                            :min="1" 
+                            :step="1" 
+                            placeholder="Ej: 12 (para docena)"
+                            :class="{ 'p-invalid': submitted && serverErrors.fraction_units }" 
+                        />
+                        <small class="text-gray-600">Número de unidades que componen una fracción completa</small>
+                        <small v-if="submitted && producto.is_fractionable && (!producto.fraction_units || producto.fraction_units < 1)" class="text-red-500 block">Las unidades de fracción son obligatorias cuando el producto es fraccionable.</small>
+                        <small v-else-if="serverErrors.fraction_units" class="text-red-500 block">{{ serverErrors.fraction_units[0] }}</small>
+                    </div>
                 </div>
 
                 <!-- Descripción -->

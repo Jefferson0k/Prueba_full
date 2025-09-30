@@ -13,20 +13,27 @@ return new class extends Migration {
 
             // Vinculación
             $table->uuid('provider_id');
-            $table->uuid('sub_branch_id'); // <-- agregado
+            $table->uuid('sub_branch_id');
 
+            // Datos del movimiento
             $table->enum('payment_type', ['credito', 'contado']);
+            $table->date('credit_date')->nullable(); // Fecha de crédito, solo para tipo 'credito'
             $table->boolean('includes_igv')->default(true);
+            $table->enum('voucher_type', ['factura', 'boleta', 'otros'])->default('otros');
 
             // Auditoría
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
-
+            $table->unsignedBigInteger('deleted_by')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             // Foreign keys
             $table->foreign('provider_id')->references('id')->on('providers');
             $table->foreign('sub_branch_id')->references('id')->on('sub_branches');
+
+            // Índices
+            $table->index(['provider_id', 'sub_branch_id']);
         });
     }
 

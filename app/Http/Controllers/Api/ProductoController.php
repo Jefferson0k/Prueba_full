@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Products\StoreProductRequest;
 use App\Http\Requests\Products\UpdateProductRequest;
 use App\Http\Resources\Producto\ProductoResource;
+use App\Jobs\AssignProductToSubBranches;
+use App\Jobs\UpdateSubBranchProductsFraction;
 use App\Models\Product;
-use App\Models\SubBranch;
-use App\Models\SubBranchProduct;
 use App\Pipelines\FilterByCategory;
 use App\Pipelines\FilterByName;
 use App\Pipelines\FilterByState;
@@ -17,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Gate;
 use Throwable;
 
@@ -45,46 +44,25 @@ class ProductoController extends Controller{
             $validated = $request->validated();
             $validated['created_by'] = Auth::id();
             $product = Product::create($validated);
-            $subBranches = SubBranch::all();
-            $subBranchProductsData = [];
-            foreach ($subBranches as $subBranch) {
-                $subBranchProductsData[] = [
-                    'id' => (string) Str::uuid(),
-                    'sub_branch_id' => $subBranch->id,
-                    'product_id' => $product->id,
-                    'current_stock' => 0,
-                    'min_stock' => 0,
-                    'max_stock' => 100,
-                    'custom_sale_price' => null,
-                    'is_active' => $product->is_active,
-                    'created_by' => Auth::id(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-            if (!empty($subBranchProductsData)) {
-                SubBranchProduct::insert($subBranchProductsData);
-            }
+            AssignProductToSubBranches::dispatchSync($product);
             DB::commit();
             return response()->json([
-                'state' => true,
-                'message' => 'Producto registrado exitosamente y asignado a ' . count($subBranches) . ' sub-sucursales.',
+                'state'   => true,
+                'message' => 'Producto registrado exitosamente. La asignación a sub-sucursales se está procesando en segundo plano.',
                 'product' => $product
             ]);
-            
         } catch (AuthorizationException $e) {
             DB::rollBack();
             return response()->json([
-                'state' => false,
+                'state'   => false,
                 'message' => 'No tienes permiso para crear un producto.'
             ], 403);
-            
         } catch (Throwable $e) {
             DB::rollBack();
             return response()->json([
-                'state' => false,
+                'state'   => false,
                 'message' => 'Error al crear el producto.',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }
@@ -101,8 +79,11 @@ class ProductoController extends Controller{
         $validated = $request->validated();
         $validated['updated_by'] = Auth::id();
         $product->update($validated);
+        if ($request->hasAny(['is_fractionable', 'fraction_units'])) {
+            UpdateSubBranchProductsFraction::dispatch($product);
+        }
         return response()->json([
-            'state' => true,
+            'state'   => true,
             'message' => 'Product updated successfully.',
             'product' => $product->refresh()
         ]);
