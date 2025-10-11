@@ -17,7 +17,6 @@ class RoomWeb extends Controller{
                 $query->with(['roomType', 'currentBooking'])->orderBy('room_number');
             }
         ])->findOrFail($floorId);
-
         return Inertia::render('panel/Room/indexRoom', [
             'floor' => $floor,
             'rooms' => $floor->rooms

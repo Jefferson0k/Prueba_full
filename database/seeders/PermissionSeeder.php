@@ -9,6 +9,14 @@ class PermissionSeeder extends Seeder{
     public function run(): void{
 
         #=============================
+        #CAJAS
+        #=============================
+        Permission::create(['name' => 'crear caja']);
+        Permission::create(['name' => 'editar caja']);
+        Permission::create(['name' => 'eliminar caja']);
+        Permission::create(['name' => 'view caja']);
+
+        #=============================
         #MOVEMENT DETAIL
         #=============================
         Permission::create(['name' => 'create movimiento detalle']);
@@ -78,11 +86,9 @@ class PermissionSeeder extends Seeder{
         # ============================
         # KARDEX
         # ============================
-        Permission::create(['name' => 'create kardex entries']);
-        Permission::create(['name' => 'update kardex entries']);
-        Permission::create(['name' => 'delete kardex entries']);
-        Permission::create(['name' => 'view kardex']);
-        Permission::create(['name' => 'export kardex']);
+        Permission::create(['name' => 'view kardex producto']);
+        Permission::create(['name' => 'view kardex general']);
+        Permission::create(['name' => 'view kardex valorizado']);
         Permission::create(['name' => 'view kardex reports']);
 
         #===========================

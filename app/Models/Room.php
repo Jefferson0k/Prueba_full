@@ -109,10 +109,14 @@ class Room extends Model implements Auditable
             ->exists();
     }
 
-    public function getFullNameAttribute()
-    {
-        return $this->floor->branch->name . ' - ' . $this->floor->name . ' - ' . $this->room_number;
-    }
+public function getFullNameAttribute()
+{
+    $branchName = $this->floor?->subBranch?->branch?->name ?? 'Sin sucursal';
+    $floorName = $this->floor?->name ?? 'Sin piso';
+    $roomNumber = $this->room_number ?? 'Sin número';
+
+    return "{$branchName} - {$floorName} - {$roomNumber}";
+}
 
     protected static function boot()
     {

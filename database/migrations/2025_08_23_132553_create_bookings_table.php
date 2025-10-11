@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -10,31 +9,57 @@ return new class extends Migration
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('booking_code')->unique();
-            $table->uuid('room_id');
-            $table->uuid('customers_id');
-            $table->uuid('rate_type_id');
-            $table->uuid('currency_id');
-            $table->datetime('check_in');
-            $table->datetime('check_out');
-            $table->integer('total_hours');
-            $table->decimal('rate_per_unit', 10, 2);
-            $table->decimal('subtotal', 10, 2);
-            $table->decimal('tax_amount', 10, 2)->default(0);
-            $table->decimal('discount_amount', 10, 2)->default(0);
-            $table->decimal('total_amount', 10, 2);
-            $table->decimal('paid_amount', 10, 2)->default(0);
-            $table->enum('status', ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'])->default('pending');
-            $table->text('notes')->nullable();
-            $table->datetime('cancelled_at')->nullable();
-            $table->text('cancellation_reason')->nullable();
+            $table->string('booking_code')->unique(); // Ej: HAB-2024-0001
             
-            // Auditoría
-            $table->unsignedBigInteger('created_by')->nullable();
-            $table->unsignedBigInteger('updated_by')->nullable();
-            $table->unsignedBigInteger('deleted_by')->nullable();
-            $table->unsignedBigInteger('cancelled_by')->nullable();
-
+            // RELACIONES PRINCIPALES
+            $table->uuid('room_id'); // La habitación asignada
+            $table->uuid('customers_id'); // El cliente a nombre de quien está
+            $table->uuid('rate_type_id'); // Tipo de tarifa (por hora, por noche, etc)
+            $table->uuid('currency_id');
+            
+            // TIEMPO Y FECHAS
+            $table->datetime('check_in'); // Cuando entró
+            $table->datetime('check_out'); // Cuando debe salir (check_in + horas contratadas)
+            $table->datetime('actual_check_out')->nullable(); // Cuando realmente salió
+            $table->integer('total_hours'); // Horas contratadas (2, 4, 8, etc)
+            $table->integer('actual_hours')->nullable(); // Horas reales que estuvo
+            
+            // COSTOS
+            $table->decimal('rate_per_hour', 10, 2); // Precio por hora de la habitación
+            $table->decimal('room_subtotal', 10, 2); // Solo costo de habitación
+            $table->decimal('products_subtotal', 10, 2)->default(0); // Total productos consumidos
+            $table->decimal('tax_amount', 10, 2)->default(0); // IGV
+            $table->decimal('discount_amount', 10, 2)->default(0);
+            $table->decimal('total_amount', 10, 2); // Gran total (habitación + productos)
+            $table->decimal('paid_amount', 10, 2)->default(0);
+            
+            // ESTADOS
+            $table->enum('status', [
+                'active',       // Cliente está en la habitación AHORA
+                'finished',     // Ya terminó (manual o automático)
+                'cancelled'     // Cancelado
+            ])->default('active');
+            
+            // CÓMO TERMINÓ
+            $table->enum('finish_type', [
+                'manual',       // Lo finalizaste tú
+                'automatic',    // Se acabó el tiempo automáticamente
+            ])->nullable();
+            
+            // TIPO DE COMPROBANTE
+            $table->enum('voucher_type', [
+                'ticket',       // Ticket simple
+                'boleta',       // Boleta de venta
+                'factura'       // Factura
+            ])->default('ticket');
+            
+            $table->string('voucher_number')->nullable(); // Serie y correlativo
+            
+            $table->text('notes')->nullable();
+            
+            // AUDITORÍA
+            $table->unsignedBigInteger('created_by')->nullable(); // Quien registró la entrada
+            $table->unsignedBigInteger('finished_by')->nullable(); // Quien finalizó
             $table->timestamps();
             $table->softDeletes();
             
@@ -44,17 +69,15 @@ return new class extends Migration
             $table->foreign('rate_type_id')->references('id')->on('rate_types');
             $table->foreign('currency_id')->references('id')->on('currencies');
             
-            // Índices
-            $table->index(['booking_code', 'deleted_at']);
-            $table->index(['status', 'deleted_at']);
-            $table->index(['check_in', 'check_out']);
+            // Índices importantes
             $table->index(['room_id', 'status']);
-            $table->index('customers_id');
-            $table->index('created_by');
-            $table->index('updated_by');
+            $table->index(['status', 'check_out']);
+            $table->index(['booking_code']);
+            $table->index(['customers_id']);
+            $table->index(['created_at', 'status']);
         });
     }
-
+    
     public function down()
     {
         Schema::dropIfExists('bookings');

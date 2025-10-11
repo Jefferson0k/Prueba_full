@@ -25,6 +25,9 @@ class Movement extends Model implements AuditableContract
         'credit_date',
         'includes_igv',
         'voucher_type',
+        'created_by',
+        'updated_by',
+        'deleted_by'
     ];
     protected $dates = ['created_at', 'updated_at', 'date', 'credit_date'];
 

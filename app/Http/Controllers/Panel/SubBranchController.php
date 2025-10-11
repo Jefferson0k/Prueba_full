@@ -7,8 +7,12 @@ use App\Http\Requests\SubBranch\StoreSubBranchRequest;
 use App\Http\Resources\SubBranch\SubBranchResource;
 use App\Jobs\CreateSubBranchProducts;
 use App\Models\SubBranch;
+use App\Pipelines\SubBranch\OrderAlphabetically;
+use App\Pipelines\SubBranch\PrioritizeUserSubBranch;
+use App\Pipelines\SubBranch\SearchSubBranch;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
+use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -82,6 +86,23 @@ class SubBranchController extends Controller{
                 'error'   => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function search(Request $request){
+        $user = Auth::user();
+        $userSubBranchId = $user?->sub_branch_id;
+        $query = app(Pipeline::class)
+            ->send(SubBranch::query())
+            ->through([SearchSubBranch::class])
+            ->thenReturn();
+        $query->orderBy('name', 'asc');
+        $subBranches = $query->get();
+        if ($userSubBranchId) {
+            $subBranches = $subBranches->sortByDesc(function ($branch) use ($userSubBranchId) {
+                return $branch->id === $userSubBranchId ? 1 : 0;
+            })->values();
+        }
+        return SubBranchResource::collection($subBranches);
     }
     public function show(){}
     public function delete(){}

@@ -22,7 +22,7 @@ class StoreMovementRequest extends FormRequest
             'payment_type'  => ['required', 'in:credito,contado'],
             'credit_date'   => ['required_if:payment_type,credito', 'nullable', 'date'],
             'includes_igv'  => ['required', 'boolean'],
-            'voucher_type'  => ['required', 'in:factura,boleta,otros'],
+            'voucher_type'  => ['required', 'in:factura,boleta,guia'],
 
             'created_by'    => ['nullable', 'exists:users,id'],
             'updated_by'    => ['nullable', 'exists:users,id'],
@@ -52,7 +52,7 @@ class StoreMovementRequest extends FormRequest
             'includes_igv.boolean'   => 'El valor de IGV debe ser verdadero o falso.',
 
             'voucher_type.required'  => 'El tipo de comprobante es obligatorio.',
-            'voucher_type.in'        => 'El tipo de comprobante debe ser "factura", "boleta" u "otros".',
+            'voucher_type.in'        => 'El tipo de comprobante debe ser "factura", "boleta" u "guia".',
 
             'created_by.exists'      => 'El usuario creador no existe.',
             'updated_by.exists'      => 'El usuario que actualiza no existe.',

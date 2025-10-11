@@ -7,15 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Traits\HasAuditFields;
-use \OwenIt\Auditing\Auditable;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
-class Kardex extends Model{
+class Kardex extends Model implements AuditableContract
+{
     use HasFactory, HasUuids, SoftDeletes, HasAuditFields, Auditable;
+
+    protected $table = 'kardex';
+
     protected $fillable = [
         'product_id',
         'sub_branch_id',
-        'movement_id',
+        'movement_detail_id',
         'sale_id',
         'precio_total',
         'SAnteriorCaja',
@@ -27,6 +32,9 @@ class Kardex extends Model{
         'movement_type',
         'movement_category',
         'estado',
+        'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     // Relaciones
@@ -40,9 +48,9 @@ class Kardex extends Model{
         return $this->belongsTo(SubBranch::class);
     }
 
-    public function movement(): BelongsTo
+    public function movementDetail(): BelongsTo
     {
-        return $this->belongsTo(Movement::class);
+        return $this->belongsTo(MovementDetail::class);
     }
 
     public function sale(): BelongsTo

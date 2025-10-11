@@ -2,38 +2,35 @@
 
 namespace App\Policies;
 
-use App\Models\Kardex;
 use App\Models\User;
+use App\Models\Kardex;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class KardexPolicy
 {
     use HandlesAuthorization;
 
-    public function viewAny(User $user)
+    // Permite ver el kardex por producto
+    public function viewProduct(User $user)
     {
-        return $user->can('view_kardex');
+        return $user->can('view kardex producto');
     }
 
-    public function view(User $user, Kardex $kardex)
+    // Permite ver el kardex general
+    public function viewGeneral(User $user)
     {
-        return $user->can('view_kardex');
+        return $user->can('view kardex general');
     }
 
-    public function create(User $user)
+    // Permite ver el kardex valorizado
+    public function viewValorizado(User $user)
     {
-        return $user->can('create_kardex_entries');
+        return $user->can('view kardex valorizado');
     }
 
-    public function update(User $user, Kardex $kardex)
+    // Permite exportar cualquiera
+    public function export(User $user)
     {
-        // Generalmente los movimientos de kardex no se actualizan
-        return $user->can('update_kardex_entries') && $user->hasRole('super-admin');
-    }
-
-    public function delete(User $user, Kardex $kardex)
-    {
-        // Solo super admin puede eliminar entradas de kardex
-        return $user->can('delete_kardex_entries') && $user->hasRole('super-admin');
+        return $user->can('export kardex');
     }
 }

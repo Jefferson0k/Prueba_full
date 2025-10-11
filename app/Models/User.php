@@ -23,7 +23,7 @@ class User extends Authenticatable
         'password',
         'status',
         'restablecimiento',
-        'sub_branch_id', // nueva columna vinculada
+        'sub_branch_id',
     ];
 
     protected $hidden = [

@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->enum('payment_type', ['credito', 'contado']);
             $table->date('credit_date')->nullable(); // Fecha de crédito, solo para tipo 'credito'
             $table->boolean('includes_igv')->default(true);
-            $table->enum('voucher_type', ['factura', 'boleta', 'otros'])->default('otros');
+            $table->enum('voucher_type', ['factura', 'boleta', 'guia'])->default('guia');
 
             // Auditoría
             $table->unsignedBigInteger('created_by')->nullable();

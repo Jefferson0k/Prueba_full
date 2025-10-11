@@ -1,5 +1,5 @@
 <template>
-    <Head title="Tipo habitacion" />
+    <Head title="Kardex Valorizado" />
     <AppLayout>
         <div>
             <template v-if="isLoading">
@@ -7,7 +7,8 @@
             </template>
             <template v-else>
                 <div class="card">
-
+                    <searchValorizado/>
+                    <listKardexValorizado/>
                 </div>
             </template>
         </div>
@@ -19,6 +20,8 @@ import { ref, onMounted } from 'vue';
 import AppLayout from '@/layout/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import Espera from '@/components/Espera.vue';
+import listKardexValorizado from './Desarrollo/listKardexValorizado.vue';
+import searchValorizado from './Desarrollo/searchValorizado.vue';
 
 const isLoading = ref(true);
 

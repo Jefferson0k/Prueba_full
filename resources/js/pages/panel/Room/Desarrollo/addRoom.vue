@@ -8,7 +8,7 @@
         {{ floor.sub_branch.name }} - Piso {{ getFloorLabel(floor.floor_number) }}
       </p>
     </div>
-    <Button label="Nueva Habitación" icon="pi pi-plus" @click="showDialog = true" />
+    <Button label="Nueva Habitación" icon="pi pi-plus" @click="showDialog = true" severity="contrast"/>
   </div>
 
   <Dialog v-model:visible="showDialog" modal :style="{ width: '500px' }" header="Agregar Nueva Habitación">
@@ -56,8 +56,8 @@
       </div>
     </form>
     <template #footer>
-      <Button label="Cancelar" icon="pi pi-times" class="p-button-text" @click="closeDialog" :disabled="loading" />
-      <Button label="Guardar" icon="pi pi-check" @click="submitForm" :loading="loading" />
+      <Button label="Cancelar" icon="pi pi-times"  text severity="secondary" @click="closeDialog" :disabled="loading" />
+      <Button label="Guardar" icon="pi pi-check" severity="contrast" @click="submitForm" :loading="loading" />
     </template>
   </Dialog>
 </template>

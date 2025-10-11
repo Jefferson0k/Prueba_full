@@ -19,7 +19,8 @@ class MovementsController extends Controller{
     public function index(){
         try {
             Gate::authorize('viewAny', Movement::class);
-            $query = Movement::with(['provider', 'subBranch'])
+            
+            $query = Movement::with(['provider', 'subBranch', 'details'])
                 ->where('sub_branch_id', Auth::user()->sub_branch_id);
             $movements = app(MovementPipeline::class)->handle($query);
             $perPage = request()->input('per_page', 15);
@@ -34,8 +35,8 @@ class MovementsController extends Controller{
             $data = $request->validated();
             $data['sub_branch_id'] = Auth::user()->sub_branch_id;
             $data['created_by'] = Auth::id();
-            Movement::create($data);
-            return $this->created('Movimiento creado correctamente.');
+            $movement = Movement::create($data);
+            return $this->created(['id' => $movement->id], 'Movimiento creado correctamente.');
         } catch (Throwable $e) {
             return $this->exception($e, 'Error al crear el movimiento.');
         }

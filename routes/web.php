@@ -12,7 +12,11 @@ use App\Http\Controllers\Api\TipoHabitacionController;
 use App\Http\Controllers\Api\UsoHabitacionController;
 use App\Http\Controllers\Api\UsuariosController;
 use App\Http\Controllers\Panel\BranchController;
+use App\Http\Controllers\Panel\CashRegisterController;
+use App\Http\Controllers\Panel\CustomerController;
 use App\Http\Controllers\Panel\FloorController;
+use App\Http\Controllers\Panel\kardexController;
+use App\Http\Controllers\Panel\MovementDetailController;
 use App\Http\Controllers\Panel\MovementsController;
 use App\Http\Controllers\Panel\ProviderController;
 use App\Http\Controllers\Panel\RoomController;
@@ -20,19 +24,24 @@ use App\Http\Controllers\Panel\RoomTypeController;
 use App\Http\Controllers\Panel\SubBranchController;
 use App\Http\Controllers\Panel\SystemSettingController;
 use App\Http\Controllers\Web\Branch\BranchWeb;
+use App\Http\Controllers\Web\Cash\CashWeb;
+use App\Http\Controllers\Web\Cash\cashWebHabitaciones;
 use App\Http\Controllers\Web\SubBranch\SubBranchWeb;
 use App\Http\Controllers\Web\Categoria\CategoriaWeb;
 use App\Http\Controllers\Web\Cliente\ClienteWeb;
 use App\Http\Controllers\Web\Floor\FloorWeb;
 use App\Http\Controllers\Web\Horario\HorarioWeb;
 use App\Http\Controllers\Web\DetailsMovements\DetailsMovementsWeb;
+use App\Http\Controllers\Web\Habitaciones\habitacionesGestion;
+use App\Http\Controllers\Web\Habitaciones\habitacionesWeb;
+use App\Http\Controllers\Web\Inventario\InventarioWeb;
+use App\Http\Controllers\Web\Kardex\kardexWeb;
 use App\Http\Controllers\Web\Movements\MovementsWeb;
 use App\Http\Controllers\Web\Piso\PisoWeb;
 use App\Http\Controllers\Web\Producto\ProductoWeb;
+use App\Http\Controllers\Web\Room\RoomFloorWeb;
 use App\Http\Controllers\Web\Room\RoomWeb;
 use App\Http\Controllers\Web\SystemSetting\SystemSettingWeb;
-use App\Http\Controllers\Web\TipoHabitacion\TipoHabitacionWeb;
-use App\Http\Controllers\Web\UsoHabitacion\UsoHabitacionWeb;
 use App\Http\Controllers\Web\UsuarioWebController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -53,30 +62,87 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     # VISTAS DEL FRONTEND
     Route::prefix('panel')->group(function () {
+
+        Route::get('/inventario', [InventarioWeb::class, 'view'])->name('kardex.view');
+        Route::get('/cajas', [CashWeb::class, 'view'])->name('cajas.view');
+        Route::get('/habitaciones', [habitacionesWeb::class, 'view'])->name('habitaciones.view');
+        Route::get('/aperturar', [cashWebHabitaciones::class, 'view'])->name('aperturar.view');
+        Route::get('/habitaciones/online', [habitacionesGestion::class, 'view'])->name('online.view');
+        Route::get('/cuarto/{id}', [RoomFloorWeb::class, 'view'])->name('cuarto.view');
+
+        # 🔹 Kardex (por producto, general y valorizado)
+        Route::get('/kardex', [kardexWeb::class, 'view'])->name('kardex.view');
+        Route::get('/kardex/general', [kardexWeb::class, 'viewGeneral'])->name('kardex.general.view');
+        Route::get('/kardex/valorizado', [kardexWeb::class, 'viewValorizado'])->name('kardex.valorizado.view');
+
+        # 🔹 Movimientos
         Route::get('/movimientos', [MovementsWeb::class,'view'])->name('movimientos.view');
+        Route::get('/movimientos/{movement_id}', [DetailsMovementsWeb::class, 'view'])->name('movimientos.details.view');
+
+        # 🔹 Sucursales y sub-sucursales
         Route::get('/branches/{id}/sub-branches', [SubBranchWeb::class,'view'])->name('branches.subbranches.view');
+        Route::get('/sucursales', [BranchWeb::class, 'view'])->name('sucursales.index');
+
+        # 🔹 Usuarios y roles
         Route::get('/usuario', [UsuarioWebController::class,'index'])->name('usuario.index');
         Route::get('/roles', [UsuarioWebController::class, 'roles'])->name('roles.index');
+
+        # 🔹 Clientes
         Route::get('/clientes', [ClienteWeb::class, 'view'])->name('clientes.index');
+
+        # 🔹 Pisos, habitaciones, tipos y usos
         Route::get('/sub-branches/{subBranch}/floors', [FloorWeb::class, 'view'])->name('habitaciones.index');
         Route::get('/floors/{floor}/rooms', [RoomWeb::class, 'view'])->name('rooms.index');
-        Route::get('/horarios', [HorarioWeb::class, 'view'])->name('horarios.index');
         Route::get('/pisos', [PisoWeb::class, 'view'])->name('pisos.index');
-        Route::get('/tipos-habitaciones', [TipoHabitacionWeb::class, 'view'])->name('tipos-habitaciones.index');
-        Route::get('/uso-habitaciones', [UsoHabitacionWeb::class, 'view'])->name('uso-habitaciones.index');
+
+        # 🔹 Categorías y productos
         Route::get('/categorias', [CategoriaWeb::class, 'view'])->name('categorias.index');
         Route::get('/productos', [ProductoWeb::class, 'view'])->name('productos.index');
+
+        # 🔹 Horarios y configuración del sistema
+        Route::get('/horarios', [HorarioWeb::class, 'view'])->name('horarios.index');
         Route::get('/configuracion', [SystemSettingWeb::class, 'view'])->name('configuracion.index');
-        Route::get('/sucursales', [BranchWeb::class, 'view'])->name('sucursales.index');
-        Route::get('/movimientos/{movement_id}', [DetailsMovementsWeb::class, 'view'])
-            ->name('movimientos.details.view');
     });
 
+    Route::prefix('floors-rooms')->group(function () {
+        Route::get('/', [FloorController::class, 'floorRoom'])->name('floors.rooms.index');
+    });
+
+    # CUSTOMER => BACKEND
+    Route::prefix('customer')->group(function () {
+        Route::post('/', [CustomerController::class, 'store'])->name('customer.store');
+    });
+
+    # CASH => BACKEND
+    Route::prefix('cash')->group(function () {
+        Route::get('/', [CashRegisterController::class, 'index'])->name('cash.cash-registers.index');
+        Route::post('/multiple', [CashRegisterController::class, 'createMultiple'])->name('cash.cash-registers.multiple');
+        Route::get('/{id}', [CashRegisterController::class, 'show'])->name('cash.cash-registers.show');
+
+        // ✅ Nueva ruta para aperturar caja
+        Route::post('/{id}/open', [CashRegisterController::class, 'open'])->name('cash.cash-registers.open');
+    });
+
+    # KARDEX => BACKEND
+    Route::prefix('kardex')->group(function () {
+        Route::get('/', [kardexController::class, 'index']);
+        Route::get('/general', [kardexController::class, 'indexGeneral']);
+        Route::get('/valorizado', [kardexController::class, 'indexKardexValorizado']);
+        Route::get('/sub-branches/{id}/inventario', [kardexController::class, 'inventario'])
+        ->name('subbranches.inventario');
+    });
+    
+    #MOVEMENT DETAIL => BACKEND
+    Route::prefix('movement-detail')->group(function () {
+        Route::post('/', [MovementDetailController::class, 'store']);
+        Route::get('/{movement}/details', [MovementDetailController::class, 'index']);
+    });
 
     #PROVIDERS => BACKEND
     Route::prefix('providers')->group(function () {
         Route::get('/', [ProviderController::class, 'index']);
     });
+
     #MOVEMENTS => BACKEND
     Route::prefix('movements')->group(function () {
         Route::get('/', [MovementsController::class, 'index'])->name('movements.index');
@@ -112,12 +178,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
     });
 
-    #SUB BRANCH => BACKEND
+    # SUB BRANCH => BACKEND
     Route::prefix('sub-branches')->group(function () {
+        Route::get('/search', [SubBranchController::class, 'search'])
+            ->name('subbranches.search');
         Route::get('/{id}', [SubBranchController::class, 'index']);
         Route::post('/', [SubBranchController::class, 'store']);
     });
-    
+
     Route::prefix('rooms')->controller(RoomController::class)->group(function () {
         Route::apiResource('/', RoomController::class)
             ->parameters(['' => 'room']);

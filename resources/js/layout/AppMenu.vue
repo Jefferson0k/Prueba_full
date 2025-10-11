@@ -18,14 +18,14 @@ const model = computed(() => [
         label: 'Configuración',
         items: [
             hasPermission('view branches') && { label: 'Sucursales', icon: 'pi pi-fw pi-building', to: '/panel/sucursales' },
-            hasPermission('ver pisos') && { label: 'Pisos', icon: 'pi pi-fw pi-sitemap', to: '/panel/pisos' },
+            hasPermission('view caja') && { label: 'Cajas', icon: 'pi pi-fw pi-sitemap', to: '/panel/cajas' },
             hasPermission('ver tipos de habitación') && { label: 'Tipos de Habitación', icon: 'pi pi-fw pi-th-large', to: '/panel/tipos-habitacion' },
         ].filter(Boolean),
     },
     {
         label: 'Habitaciones',
         items: [
-            hasPermission('view rooms') && { label: 'Gestión de Habitaciones', icon: 'pi pi-fw pi-home', to: '/panel/habitaciones' },
+            hasPermission('view rooms') && { label: 'Habitaciones', icon: 'pi pi-fw pi-home', to: '/panel/habitaciones' },
         ].filter(Boolean),
     },
     {
@@ -67,9 +67,9 @@ const model = computed(() => [
     {
         label: 'Kardex',
         items: [
-            hasPermission('view kardex') && { label: 'Kardex General', icon: 'pi pi-fw pi-file-o', to: '/panel/kardex' },
-            hasPermission('view kardex') && { label: 'Kardex por Producto', icon: 'pi pi-fw pi-list', to: '/panel/kardex/producto' },
-            hasPermission('view kardex') && { label: 'Kardex Valorizado', icon: 'pi pi-fw pi-dollar', to: '/panel/kardex/valorizado' },
+            hasPermission('view kardex general') && { label: 'Kardex General', icon: 'pi pi-fw pi-file-o', to: '/panel/kardex/general' },
+            hasPermission('view kardex producto') && { label: 'Kardex por Producto', icon: 'pi pi-fw pi-list', to: '/panel/kardex' },
+            hasPermission('view kardex valorizado') && { label: 'Kardex Valorizado', icon: 'pi pi-fw pi-dollar', to: '/panel/kardex/valorizado' },
         ].filter(Boolean),
     },
     {

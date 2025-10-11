@@ -97,10 +97,10 @@
             </template>
         </Column>
         
-        <Column field="sub_total" header="Sub Total" sortable style="min-width: 8rem">
+        <Column field="subtotal" header="Sub Total" sortable style="min-width: 8rem">
             <template #body="slotProps">
-                <span :class="{ 'text-red-500': !slotProps.data.sub_total }">
-                    {{ formatCurrency(slotProps.data.sub_total) || 'S/ 0.00' }}
+                <span :class="{ 'text-red-500': !slotProps.data.subtotal }">
+                    {{ formatCurrency(slotProps.data.subtotal) || 'S/ 0.00' }}
                 </span>
             </template>
         </Column>
@@ -113,7 +113,6 @@
             </template>
         </Column>
         
-        <!-- Corregido: era "totoal" ahora es "total" -->
         <Column field="total" header="Total" sortable style="min-width: 8rem">
             <template #body="slotProps">
                 <span class="font-semibold" :class="{ 'text-red-500': !slotProps.data.total }">
@@ -164,6 +163,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
+import { router } from '@inertiajs/vue3'; // Importar router de Inertia
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -246,7 +246,7 @@ function getVoucherTypeLabel(type) {
     const types = {
         'factura': 'Factura',
         'boleta': 'Boleta',
-        'otros': 'Otros'
+        'guia': 'Guia'
     };
     return types[type] || type;
 }
@@ -279,6 +279,34 @@ function getIgvSeverity(includesIgv) {
 function toggleActionsMenu(event, movement) {
     selectedMovement.value = movement;
     actionsMenu.value.toggle(event);
+}
+
+// Ver movimiento - Navegar a la página de detalle
+function viewMovement(movement) {
+    if (!movement || !movement.id) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se puede ver el movimiento: ID no disponible',
+            life: 3000
+        });
+        return;
+    }
+
+    // Usar Inertia para navegar a la página de detalle
+    router.visit(`/panel/movimientos/${movement.id}`);
+}
+
+// Editar movimiento
+function editMovement(movement) {
+    // Implementar edición
+    console.log('Editar movimiento:', movement);
+    toast.add({
+        severity: 'info',
+        summary: 'Información',
+        detail: `Editando movimiento: ${movement.code || 'sin código'}`,
+        life: 2000
+    });
 }
 
 // Cargar movimientos con validación
@@ -356,30 +384,6 @@ function onSearch() {
         currentPage.value = 1;
         loadMovements(1, searchQuery.value);
     }, 300);
-}
-
-// Ver movimiento
-function viewMovement(movement) {
-    // Implementar vista de detalle
-    console.log('Ver movimiento:', movement);
-    toast.add({
-        severity: 'info',
-        summary: 'Información',
-        detail: `Viendo movimiento: ${movement.code || 'sin código'}`,
-        life: 2000
-    });
-}
-
-// Editar movimiento
-function editMovement(movement) {
-    // Implementar edición
-    console.log('Editar movimiento:', movement);
-    toast.add({
-        severity: 'info',
-        summary: 'Información',
-        detail: `Editando movimiento: ${movement.code || 'sin código'}`,
-        life: 2000
-    });
 }
 
 // Confirmar eliminación

@@ -30,9 +30,9 @@ class DatabaseSeeder extends Seeder{
         // Estructura de hotel
         $this->call([
             BranchSeeder::class,        // Sucursales
+            RoomTypeSeeder::class
             #SubBranchSeeder::class,
             #FloorSeeder::class,         // Pisos
-            #RoomTypeSeeder::class,      // Tipos de habitación
             #RoomSeeder::class,          // Habitaciones
         ]);
 

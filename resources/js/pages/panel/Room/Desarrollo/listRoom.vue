@@ -161,5 +161,6 @@ function applyStatusFilter() {
 watch(() => props.refresh, () => {
   rooms.value = [...props.rooms];
   total.value = props.rooms.length;
+  statusFilter.value = null;
 });
 </script>

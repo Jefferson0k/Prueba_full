@@ -9,10 +9,12 @@ use App\Http\Requests\Floor\{
     UpdateFloorRequest
 };
 use App\Http\Resources\Floor\FloorResource;
+use App\Http\Resources\FloorRoom\FloorRoomResource;
 use App\Models\Floor;
 use App\Services\FloorService;
 use App\Support\ApiResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
 use Throwable;
 
 class FloorController extends Controller{
@@ -57,7 +59,7 @@ class FloorController extends Controller{
             return response()->json([
                 'data' => new FloorResource($floor),
                 'message' => 'Piso creado correctamente.'
-            ], 201); // 201 Created
+            ], 201);
             
         } catch (Throwable $e) {
             return $this->exception($e, 'No se pudo crear el piso.');
@@ -108,5 +110,22 @@ class FloorController extends Controller{
         } catch (Throwable $e) {
             return $this->exception($e, 'No se pudieron obtener los pisos con conteos de habitaciones.');
         }
+    }
+    public function floorRoom(){
+        $user = Auth::user();
+        if (!$user->sub_branch_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El usuario no tiene una sub-sucursal asignada.',
+                'data' => []
+            ], 404);
+        }
+        $floors = Floor::with([
+                'rooms.roomType'
+            ])
+            ->where('sub_branch_id', $user->sub_branch_id)
+            ->active()
+            ->get();
+        return FloorRoomResource::collection($floors);
     }
 }
