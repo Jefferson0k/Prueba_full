@@ -23,8 +23,10 @@ class Booking extends Model implements AuditableContract{
     protected $fillable = [
         'booking_code', 'room_id', 'client_id', 'rate_type_id', 'currency_id',
         'check_in', 'check_out', 'total_hours', 'rate_per_unit', 'subtotal',
-        'tax_amount', 'discount_amount', 'total_amount', 'paid_amount',
-        'status', 'notes', 'cancelled_at', 'cancellation_reason', 'cancelled_by'
+        'tax_amount', 'discount_amount', 'total_amount', 'paid_amount','customers_id',
+        'status', 'notes', 'cancelled_at', 'cancellation_reason', 'cancelled_by','rate_per_hour',
+        'room_subtotal','products_subtotal','tax_amount','discount_amount','total_amount','updated_by',
+        'sub_branch_id'
     ];
 
     protected $casts = [
@@ -52,9 +54,14 @@ class Booking extends Model implements AuditableContract{
         return $this->belongsTo(Room::class);
     }
 
-    public function client()
+    public function customer()
     {
-        return $this->belongsTo(Client::class);
+        return $this->belongsTo(Customer::class, 'customers_id');
+    }
+
+    public function subBranch()
+    {
+        return $this->belongsTo(SubBranch::class, 'sub_branch_id');
     }
 
     public function rateType()
@@ -94,8 +101,6 @@ class Booking extends Model implements AuditableContract{
             $q->where('branch_id', $branchId);
         });
     }
-
-    // Métodos de negocio
     public function calculateTotals()
     {
         $this->subtotal = $this->rate_per_unit * $this->total_hours;

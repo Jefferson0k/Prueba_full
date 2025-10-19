@@ -1,0 +1,767 @@
+<template>
+    <div class="p-5 bg-surface-50 dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-surface-900 dark:text-surface-0 flex items-center gap-2">
+                <i class="pi pi-shopping-cart"></i>
+                Productos Adicionales
+            </h3>
+            <Button 
+                label="Buscar Productos" 
+                icon="pi pi-search" 
+                severity="success"
+                size="small"
+                @click="openDialog"
+            />
+        </div>
+
+        <!-- Lista de productos agregados al carrito -->
+        <DataTable 
+            :value="products" 
+            :paginator="false"
+            class="p-datatable-sm"
+            v-if="products.length > 0"
+        >
+            <Column field="nombre" header="Producto">
+                <template #body="{ data }">
+                    <div class="flex items-center gap-2">
+                        <i class="pi pi-box text-primary-500"></i>
+                        <div>
+                            <span class="font-medium block">{{ data.nombre }}</span>
+                            <span class="text-xs text-surface-500 dark:text-surface-400">
+                                Código: {{ data.codigo }}
+                            </span>
+                        </div>
+                    </div>
+                </template>
+            </Column>
+            <Column field="quantity" header="Cantidad" style="width: 150px">
+                <template #body="{ data }">
+                    <Badge :value="formatQuantityDisplay(data)" severity="info" />
+                </template>
+            </Column>
+            <Column field="precio_venta" header="Precio Unit." style="width: 120px">
+                <template #body="{ data }">
+                    <span class="font-semibold text-green-600 dark:text-green-400">
+                        S/ {{ parseFloat(data.precio_venta).toFixed(2) }}
+                    </span>
+                </template>
+            </Column>
+            <Column header="Subtotal" style="width: 120px">
+                <template #body="{ data }">
+                    <span class="font-bold text-surface-900 dark:text-surface-0">
+                        S/ {{ calculateProductSubtotal(data) }}
+                    </span>
+                </template>
+            </Column>
+            <Column header="Acciones" style="width: 100px">
+                <template #body="{ data }">
+                    <div class="flex gap-1">
+                        <Button 
+                            icon="pi pi-pencil" 
+                            severity="info"
+                            text
+                            rounded
+                            size="small"
+                            @click="editProduct(data)"
+                            v-tooltip.top="'Editar cantidad'"
+                        />
+                        <Button 
+                            icon="pi pi-trash" 
+                            severity="danger"
+                            text
+                            rounded
+                            size="small"
+                            @click="removeProduct(data.id)"
+                            v-tooltip.top="'Eliminar'"
+                        />
+                    </div>
+                </template>
+            </Column>
+        </DataTable>
+
+        <!-- Sin productos -->
+        <div v-else class="text-center py-6 text-surface-500 dark:text-surface-400">
+            <i class="pi pi-shopping-cart text-4xl mb-2"></i>
+            <p class="text-sm">No hay productos agregados</p>
+        </div>
+
+        <!-- Dialog Buscar y Agregar Productos -->
+        <Dialog 
+            v-model:visible="showDialog" 
+            modal 
+            header="Buscar Productos"
+            :style="{ width: '900px' }"
+            @hide="clearDialog"
+        >
+            <div class="space-y-4">
+                <!-- Buscador -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">
+                        Buscar por Código o Nombre
+                    </label>
+                    <div class="p-inputgroup">
+                        <InputText 
+                            v-model="searchQuery" 
+                            placeholder="Ej: PR9D6AFE76 o nombre del producto..." 
+                            @keyup.enter="searchProducts"
+                            :disabled="searchLoading"
+                        />
+                        <Button 
+                            icon="pi pi-search" 
+                            severity="primary"
+                            :loading="searchLoading"
+                            @click="searchProducts"
+                            label="Buscar"
+                        />
+                    </div>
+                </div>
+
+                <!-- Tabla de Resultados -->
+                <div v-if="hasSearched">
+                    <DataTable 
+                        :value="searchResults" 
+                        :loading="searchLoading"
+                        :paginator="searchResults.length > 10"
+                        :rows="10"
+                        class="p-datatable-sm"
+                        showGridlines
+                        stripedRows
+                        responsiveLayout="scroll"
+                    >
+                        <template #empty>
+                            <div class="text-center py-4">
+                                <i class="pi pi-inbox text-4xl text-surface-400 mb-2"></i>
+                                <p class="text-surface-500 dark:text-surface-400">
+                                    No se encontraron productos
+                                </p>
+                            </div>
+                        </template>
+
+                        <Column field="codigo" header="Código" style="width: 120px">
+                            <template #body="{ data }">
+                                <span class="font-mono text-sm">{{ data.codigo }}</span>
+                            </template>
+                        </Column>
+
+                        <Column field="nombre" header="Producto">
+                            <template #body="{ data }">
+                                <div>
+                                    <p class="font-semibold text-surface-900 dark:text-surface-0">
+                                        {{ data.nombre }}
+                                    </p>
+                                    <p class="text-xs text-surface-500 dark:text-surface-400 mt-1">
+                                        {{ data.descripcion }}
+                                    </p>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column field="stock_actual" header="Stock" style="width: 120px">
+                            <template #body="{ data }">
+                                <div class="text-center">
+                                    <Tag 
+                                        :value="`${data.stock_actual}`" 
+                                        :severity="data.stock_actual > 0 ? 'success' : 'danger'"
+                                    />
+                                    <p class="text-xs text-surface-500 dark:text-surface-400 mt-1">
+                                        {{ data.unidad }}
+                                    </p>
+                                    <p v-if="data.es_fraccionable && data.fraction_units > 0" 
+                                       class="text-xs text-blue-600 dark:text-blue-400 font-semibold mt-1">
+                                        <i class="pi pi-box"></i> {{ parseFloat(data.fraction_units).toFixed(0) }} fracciones
+                                    </p>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column field="precio_venta" header="Precio" style="width: 100px">
+                            <template #body="{ data }">
+                                <span class="font-bold text-green-600 dark:text-green-400">
+                                    S/ {{ parseFloat(data.precio_venta).toFixed(2) }}
+                                </span>
+                            </template>
+                        </Column>
+
+                        <Column field="sub_sucursal" header="Sucursal" style="width: 120px">
+                            <template #body="{ data }">
+                                <span class="text-xs text-surface-600 dark:text-surface-400">
+                                    {{ data.sub_sucursal }}
+                                </span>
+                            </template>
+                        </Column>
+
+                        <Column header="Acción" style="width: 100px">
+                            <template #body="{ data }">
+                                <Button 
+                                    icon="pi pi-plus" 
+                                    label="Agregar"
+                                    severity="success"
+                                    size="small"
+                                    @click="selectProductToAdd(data)"
+                                    :disabled="data.stock_actual <= 0"
+                                />
+                            </template>
+                        </Column>
+                    </DataTable>
+                </div>
+
+                <!-- Mensaje inicial -->
+                <Message v-if="!hasSearched" severity="info" :closable="false">
+                    Ingrese un código o nombre de producto y presione Enter o haga clic en Buscar
+                </Message>
+            </div>
+
+            <template #footer>
+                <Button 
+                    label="Cerrar" 
+                    severity="secondary" 
+                    icon="pi pi-times"
+                    @click="closeDialog" 
+                />
+            </template>
+        </Dialog>
+
+        <!-- Dialog Agregar Cantidad -->
+        <Dialog 
+            v-model:visible="showQuantityDialog" 
+            modal 
+            :header="`Agregar: ${selectedProduct?.nombre}`"
+            :style="{ width: '600px' }"
+        >
+            <div class="space-y-4" v-if="selectedProduct">
+                <!-- Información del Producto -->
+                <div class="p-4 bg-surface-100 dark:bg-surface-700 rounded-lg">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="font-bold text-surface-900 dark:text-surface-0">
+                                {{ selectedProduct.nombre }}
+                            </p>
+                            <p class="text-sm text-surface-600 dark:text-surface-400">
+                                Código: {{ selectedProduct.codigo }}
+                            </p>
+                            <p v-if="selectedProduct.es_fraccionable" 
+                               class="text-xs text-blue-600 dark:text-blue-400 font-semibold mt-1">
+                                <i class="pi pi-info-circle"></i> Fraccionable: {{ selectedProduct.fracciones_por_unidad }} fracciones = 1 {{ selectedProduct.unidad }}
+                            </p>
+                        </div>
+                        <Tag 
+                            :value="`Stock: ${selectedProduct.stock_actual} ${selectedProduct.unidad}`" 
+                            severity="info"
+                        />
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-surface-300 dark:border-surface-600">
+                        <span class="text-sm text-surface-600 dark:text-surface-400">Precio por {{ selectedProduct.unidad }}:</span>
+                        <span class="text-lg font-bold text-green-600 dark:text-green-400">
+                            S/ {{ parseFloat(selectedProduct.precio_venta).toFixed(2) }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Cantidad de Fracciones -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">
+                        Cantidad de Fracciones (Unidades Individuales)
+                        <span class="text-xs text-surface-500 ml-2">
+                            ({{ selectedProduct.fracciones_por_unidad }} fracciones = 1 {{ selectedProduct.unidad }})
+                        </span>
+                    </label>
+                    <InputNumber 
+                        v-model="form.totalFractions" 
+                        :min="0" 
+                        :step="1"
+                        showButtons
+                        class="w-full"
+                        buttonLayout="horizontal"
+                        incrementButtonIcon="pi pi-plus"
+                        decrementButtonIcon="pi pi-minus"
+                        placeholder="Ej: 36 fracciones"
+                        @input="calculateUnits"
+                    />
+                    <small class="text-surface-500 dark:text-surface-400 block mt-1">
+                        Ingrese el total de fracciones/unidades individuales
+                    </small>
+                </div>
+
+                <!-- Conversión Automática -->
+                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="pi pi-calculator text-blue-600"></i>
+                        <span class="font-semibold text-blue-800 dark:text-blue-200">
+                            Conversión Automática
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-surface-700 dark:text-surface-300">
+                                {{ selectedProduct.unidad }}s completos:
+                            </span>
+                            <span class="font-bold text-lg text-blue-600 dark:text-blue-400">
+                                {{ calculatedUnits }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-surface-700 dark:text-surface-300">
+                                Fracciones sueltas:
+                            </span>
+                            <span class="font-bold text-lg text-blue-600 dark:text-blue-400">
+                                {{ remainingFractions }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div v-if="form.totalFractions > 0" 
+                         class="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700 text-sm text-surface-600 dark:text-surface-400">
+                        <i class="pi pi-info-circle"></i>
+                        <span v-if="calculatedUnits > 0 && remainingFractions > 0">
+                            {{ form.totalFractions }} fracciones = {{ calculatedUnits }} {{ selectedProduct.unidad }} + {{ remainingFractions }} fracciones
+                        </span>
+                        <span v-else-if="calculatedUnits > 0">
+                            {{ form.totalFractions }} fracciones = {{ calculatedUnits }} {{ selectedProduct.unidad }} exactos
+                        </span>
+                        <span v-else>
+                            {{ form.totalFractions }} fracciones sueltas
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Subtotal -->
+                <div class="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border-2 border-primary-300 dark:border-primary-700">
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-semibold text-surface-700 dark:text-surface-300">
+                            Subtotal:
+                        </span>
+                        <span class="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                            S/ {{ calculateSubtotal() }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-surface-500 dark:text-surface-400 mt-2">
+                        {{ getTotalInUnits() }} {{ selectedProduct.unidad }} × S/ {{ parseFloat(selectedProduct.precio_venta).toFixed(2) }}
+                    </p>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button 
+                    label="Cancelar" 
+                    severity="secondary" 
+                    icon="pi pi-times"
+                    @click="closeQuantityDialog" 
+                />
+                <Button 
+                    label="Agregar al Carrito" 
+                    severity="success"
+                    icon="pi pi-shopping-cart" 
+                    @click="addProduct"
+                    :disabled="!selectedProduct || form.totalFractions <= 0"
+                />
+            </template>
+        </Dialog>
+
+        <!-- Dialog Editar Cantidad -->
+        <Dialog 
+            v-model:visible="showEditDialog" 
+            modal 
+            :header="`Editar: ${editingProduct?.nombre}`"
+            :style="{ width: '500px' }"
+        >
+            <div class="space-y-4" v-if="editingProduct">
+                <!-- Información del Producto -->
+                <div class="p-3 bg-surface-100 dark:bg-surface-700 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-semibold text-surface-900 dark:text-surface-0">
+                                {{ editingProduct.nombre }}
+                            </p>
+                            <p class="text-xs text-surface-600 dark:text-surface-400">
+                                Stock: {{ editingProduct.stock_actual }} {{ editingProduct.unidad }}
+                            </p>
+                            <p v-if="editingProduct.es_fraccionable" 
+                               class="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                {{ editingProduct.fracciones_por_unidad }} fracciones = 1 {{ editingProduct.unidad }}
+                            </p>
+                        </div>
+                        <span class="text-lg font-bold text-green-600 dark:text-green-400">
+                            S/ {{ parseFloat(editingProduct.precio_venta).toFixed(2) }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Cantidad de Fracciones -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Cantidad de Fracciones</label>
+                    <InputNumber 
+                        v-model="editForm.totalFractions" 
+                        :min="0" 
+                        :step="1"
+                        showButtons
+                        class="w-full"
+                        @input="calculateEditUnits"
+                    />
+                </div>
+
+                <!-- Conversión -->
+                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded">
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>{{ editingProduct.unidad }}s completos:</span>
+                            <span class="font-bold text-blue-600">{{ editCalculatedUnits }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Fracciones sueltas:</span>
+                            <span class="font-bold text-blue-600">{{ editRemainingFractions }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total -->
+                <div class="p-3 bg-surface-100 dark:bg-surface-700 rounded">
+                    <div class="flex justify-between items-center text-sm pt-2">
+                        <span>Subtotal:</span>
+                        <span class="font-bold text-primary-600 dark:text-primary-400">
+                            S/ {{ calculateEditSubtotal() }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <template #footer>
+                <Button label="Cancelar" severity="secondary" @click="closeEditDialog" />
+                <Button 
+                    label="Actualizar" 
+                    severity="success"
+                    icon="pi pi-check"
+                    @click="updateProduct"
+                    :disabled="editForm.totalFractions <= 0"
+                />
+            </template>
+        </Dialog>
+    </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+import Button from 'primevue/button';
+import Dialog from 'primevue/dialog';
+import InputText from 'primevue/inputtext';
+import InputNumber from 'primevue/inputnumber';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Badge from 'primevue/badge';
+import Tag from 'primevue/tag';
+import Message from 'primevue/message';
+import { useToast } from 'primevue/usetoast';
+import axios from 'axios';
+
+interface Product {
+    id: string;
+    codigo: string;
+    nombre: string;
+    descripcion: string;
+    precio_compra: string;
+    precio_venta: string;
+    unidad: string;
+    fraction_units: number;
+    fracciones_por_unidad: number;
+    es_fraccionable: boolean;
+    stock_actual: number;
+    min_stock: number;
+    max_stock: number;
+    sub_sucursal: string;
+    quantity?: number; // ✅ AHORA almacena total de FRACCIONES como entero
+}
+
+interface Props {
+    modelValue?: Product[];
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    modelValue: () => []
+});
+
+const emit = defineEmits<{
+    'update:modelValue': [products: Product[]];
+}>();
+
+const toast = useToast();
+const showDialog = ref(false);
+const showQuantityDialog = ref(false);
+const showEditDialog = ref(false);
+const searchQuery = ref('');
+const searchLoading = ref(false);
+const searchResults = ref<Product[]>([]);
+const selectedProduct = ref<Product | null>(null);
+const editingProduct = ref<Product | null>(null);
+const products = ref<Product[]>(props.modelValue);
+const hasSearched = ref(false);
+
+const form = ref({
+    totalFractions: 0
+});
+
+const editForm = ref({
+    totalFractions: 0
+});
+
+// Calcular unidades completas y fracciones restantes
+const calculatedUnits = computed(() => {
+    if (!selectedProduct.value || !form.value.totalFractions) return 0;
+    return Math.floor(form.value.totalFractions / selectedProduct.value.fracciones_por_unidad);
+});
+
+const remainingFractions = computed(() => {
+    if (!selectedProduct.value || !form.value.totalFractions) return 0;
+    return form.value.totalFractions % selectedProduct.value.fracciones_por_unidad;
+});
+
+const editCalculatedUnits = computed(() => {
+    if (!editingProduct.value || !editForm.value.totalFractions) return 0;
+    return Math.floor(editForm.value.totalFractions / editingProduct.value.fracciones_por_unidad);
+});
+
+const editRemainingFractions = computed(() => {
+    if (!editingProduct.value || !editForm.value.totalFractions) return 0;
+    return editForm.value.totalFractions % editingProduct.value.fracciones_por_unidad;
+});
+
+const calculateUnits = () => {
+    // Trigger computed properties
+};
+
+const calculateEditUnits = () => {
+    // Trigger computed properties
+};
+
+// Convertir fracciones a unidades decimales (solo para mostrar)
+const getTotalInUnits = () => {
+    if (!selectedProduct.value || !form.value.totalFractions) return '0.00';
+    const total = form.value.totalFractions / selectedProduct.value.fracciones_por_unidad;
+    return total.toFixed(2);
+};
+
+// ✅ Calcular subtotal: (fracciones / fracciones_por_unidad) × precio
+const calculateSubtotal = () => {
+    if (!selectedProduct.value) return '0.00';
+    const totalUnits = form.value.totalFractions / selectedProduct.value.fracciones_por_unidad;
+    const subtotal = totalUnits * parseFloat(selectedProduct.value.precio_venta);
+    return subtotal.toFixed(2);
+};
+
+const calculateEditSubtotal = () => {
+    if (!editingProduct.value) return '0.00';
+    const totalUnits = editForm.value.totalFractions / editingProduct.value.fracciones_por_unidad;
+    const subtotal = totalUnits * parseFloat(editingProduct.value.precio_venta);
+    return subtotal.toFixed(2);
+};
+
+// ✅ Calcular subtotal de un producto en el carrito
+const calculateProductSubtotal = (product: Product) => {
+    const totalFractions = product.quantity || 0;
+    const totalUnits = totalFractions / (product.fracciones_por_unidad || 1);
+    const subtotal = totalUnits * parseFloat(product.precio_venta);
+    return subtotal.toFixed(2);
+};
+
+// Formatear display de cantidad en la tabla
+const formatQuantityDisplay = (product: Product) => {
+    if (!product.es_fraccionable || !product.quantity) {
+        return `${product.quantity || 0} unidades`;
+    }
+    
+    const totalFractions = Math.round(product.quantity);
+    const units = Math.floor(totalFractions / product.fracciones_por_unidad);
+    const fractions = totalFractions % product.fracciones_por_unidad;
+    
+    if (units > 0 && fractions > 0) {
+        return `${units} ${product.unidad} + ${fractions} frac.`;
+    } else if (units > 0) {
+        return `${units} ${product.unidad}`;
+    } else {
+        return `${fractions} fracciones`;
+    }
+};
+
+const searchProducts = async () => {
+    if (!searchQuery.value.trim()) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Advertencia',
+            detail: 'Ingrese un término de búsqueda',
+            life: 3000
+        });
+        return;
+    }
+    
+    searchLoading.value = true;
+    hasSearched.value = true;
+    searchResults.value = [];
+    
+    try {
+        const response = await axios.get('/producto/search', {
+            params: { q: searchQuery.value.trim() }
+        });
+        
+        searchResults.value = (response.data.data || []).map(product => ({
+            ...product,
+            fracciones_por_unidad: product.fraction_units || 1
+        }));
+        
+        if (searchResults.value.length === 0) {
+            toast.add({
+                severity: 'info',
+                summary: 'Sin resultados',
+                detail: 'No se encontraron productos',
+                life: 3000
+            });
+        }
+    } catch (error: any) {
+        console.error('Error al buscar productos:', error);
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: error.response?.data?.message || 'No se pudo buscar productos',
+            life: 3000
+        });
+    } finally {
+        searchLoading.value = false;
+    }
+};
+
+const selectProductToAdd = (product: Product) => {
+    selectedProduct.value = product;
+    form.value.totalFractions = 0;
+    showQuantityDialog.value = true;
+};
+
+// ✅ CORREGIDO: Almacenar fracciones directamente como entero
+const addProduct = () => {
+    if (!selectedProduct.value || form.value.totalFractions <= 0) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Cantidad Requerida',
+            detail: 'Debe ingresar al menos 1 fracción',
+            life: 3000
+        });
+        return;
+    }
+
+    const totalFractions = form.value.totalFractions; // Ya es entero
+
+    const existingIndex = products.value.findIndex(p => p.id === selectedProduct.value!.id);
+
+    if (existingIndex !== -1) {
+        const newQuantity = products.value[existingIndex].quantity! + totalFractions;
+        products.value[existingIndex].quantity = newQuantity;
+        
+        toast.add({
+            severity: 'info',
+            summary: 'Actualizado',
+            detail: 'Se actualizó la cantidad del producto',
+            life: 3000
+        });
+    } else {
+        products.value.push({
+            ...selectedProduct.value,
+            quantity: totalFractions // ✅ Almacenar fracciones totales
+        });
+        
+        toast.add({
+            severity: 'success',
+            summary: 'Agregado',
+            detail: `${selectedProduct.value.nombre} agregado al carrito`,
+            life: 3000
+        });
+    }
+
+    emit('update:modelValue', products.value);
+    closeQuantityDialog();
+};
+
+const editProduct = (product: Product) => {
+    editingProduct.value = product;
+    editForm.value.totalFractions = Math.round(product.quantity || 0);
+    showEditDialog.value = true;
+};
+
+// ✅ CORREGIDO: Actualizar con fracciones directas
+const updateProduct = () => {
+    if (!editingProduct.value || editForm.value.totalFractions <= 0) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Cantidad Requerida',
+            detail: 'Debe ingresar al menos 1 fracción',
+            life: 3000
+        });
+        return;
+    }
+    
+    const totalFractions = editForm.value.totalFractions;
+    
+    const index = products.value.findIndex(p => p.id === editingProduct.value!.id);
+    if (index !== -1) {
+        products.value[index].quantity = totalFractions; // ✅ Almacenar fracciones
+        emit('update:modelValue', products.value);
+        
+        toast.add({
+            severity: 'success',
+            summary: 'Actualizado',
+            detail: 'Cantidad actualizada correctamente',
+            life: 3000
+        });
+    }
+    
+    closeEditDialog();
+};
+
+const removeProduct = (id: string) => {
+    products.value = products.value.filter(p => p.id !== id);
+    emit('update:modelValue', products.value);
+    
+    toast.add({
+        severity: 'warn',
+        summary: 'Eliminado',
+        detail: 'Producto eliminado del carrito',
+        life: 3000
+    });
+};
+
+const openDialog = () => {
+    showDialog.value = true;
+};
+
+const closeDialog = () => {
+    showDialog.value = false;
+};
+
+const closeQuantityDialog = () => {
+    showQuantityDialog.value = false;
+    selectedProduct.value = null;
+    form.value.totalFractions = 0;
+};
+
+const closeEditDialog = () => {
+    showEditDialog.value = false;
+    editingProduct.value = null;
+    editForm.value.totalFractions = 0;
+};
+
+const clearDialog = () => {
+    searchQuery.value = '';
+    searchResults.value = [];
+    hasSearched.value = false;
+};
+</script>
+
+<style scoped>
+.p-inputgroup {
+    display: flex;
+}
+
+.p-inputgroup .p-inputtext {
+    flex: 1;
+}
+
+.font-mono {
+    font-family: 'Courier New', monospace;
+}
+</style>

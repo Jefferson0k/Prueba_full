@@ -159,4 +159,21 @@ class CashRegister extends Model implements Auditable
             ];
         }
     }
+    public static function getUserOpenCashRegister($userId = null){
+        $user = $userId ? User::find($userId) : Auth::user();
+        if (!$user) {
+            return null;
+        }
+        return self::where('opened_by', $user->id)
+            ->where('status', 'abierta')
+            ->where('is_active', true)
+            ->first();
+    }
+    public static function hasUserOpenCashRegister($userId = null): bool{
+        return (bool) self::getUserOpenCashRegister($userId);
+    }// En App\Models\CashRegister
+public function isOpened(): bool
+{
+    return $this->isOpen(); // Alias para mantener compatibilidad
+}
 }

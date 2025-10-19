@@ -3,6 +3,7 @@
 namespace App\Http\Requests\MovementDetail;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Movement;
 
 class StoreMovementDetailRequest extends FormRequest
 {
@@ -21,6 +22,26 @@ class StoreMovementDetailRequest extends FormRequest
             'units_per_box' => 'required|integer|min:1',
             'expiry_date'   => 'nullable|date|after:today',
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->movement_id) {
+                $movement = Movement::find($this->movement_id);
+                
+                // Validar que el movimiento exista
+                if (!$movement) {
+                    $validator->errors()->add('movement_id', 'El movimiento no existe.');
+                }
+                
+                // Opcional: Validaciones específicas por tipo de movimiento
+                if ($movement && $movement->movement_type === 'egreso') {
+                    // Para egresos, podrías validar que el producto sea de tipo gasto
+                    // (esto es opcional, dependiendo de tu lógica de negocio)
+                }
+            }
+        });
     }
 
     public function messages(): array

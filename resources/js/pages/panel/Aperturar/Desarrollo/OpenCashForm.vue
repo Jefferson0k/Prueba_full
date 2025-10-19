@@ -6,7 +6,6 @@
     </div>
 
     <div class="grid">
-      
       <div class="col-12 lg:col-4">
         <div class="">
           <div class="text-center">
@@ -20,31 +19,20 @@
 
       <div class="col-12 lg:col-8">
         <div class="">
-            
           <div class="field mb-4">
             <label for="cash-register" class="font-bold block mb-2">
               <i class="pi pi-calculator mr-2"></i>
               Cajas Disponibles
             </label>
-            <Dropdown
-              id="cash-register"
-              v-model="selectedCashRegister"
-              :options="availableCashRegisters"
-              optionLabel="name"
-              placeholder="Selecciona una caja para aperturar..."
-              class="w-full"
-              :class="{ 'p-invalid': errors.cash_register }"
-              :loading="loadingCashRegisters"
-            >
+            <Dropdown id="cash-register" v-model="selectedCashRegister" :options="availableCashRegisters"
+              optionLabel="name" placeholder="Selecciona una caja para aperturar..." class="w-full"
+              :class="{ 'p-invalid': errors.cash_register }" :loading="loadingCashRegisters">
               <template #value="slotProps">
                 <div v-if="slotProps.value" class="flex align-items-center">
                   <i class="pi pi-calculator mr-2"></i>
                   <span>{{ slotProps.value.name }}</span>
-                  <Tag 
-                    :value="slotProps.value.status" 
-                    :severity="getStatusSeverity(slotProps.value.status)" 
-                    class="ml-auto"
-                  />
+                  <Tag :value="slotProps.value.status" :severity="getStatusSeverity(slotProps.value.status)"
+                    class="ml-auto" />
                 </div>
                 <span v-else>{{ slotProps.placeholder }}</span>
               </template>
@@ -54,10 +42,7 @@
                     <i class="pi pi-calculator mr-2"></i>
                     <span>{{ slotProps.option.name }}</span>
                   </div>
-                  <Tag 
-                    :value="slotProps.option.status" 
-                    :severity="getStatusSeverity(slotProps.option.status)" 
-                  />
+                  <Tag :value="slotProps.option.status" :severity="getStatusSeverity(slotProps.option.status)" />
                 </div>
               </template>
             </Dropdown>
@@ -74,10 +59,8 @@
               </div>
               <div class="col-6">
                 <p class="font-bold mb-1">Estado Actual</p>
-                <Tag 
-                  :value="selectedCashRegister.status.toUpperCase()" 
-                  :severity="getStatusSeverity(selectedCashRegister.status)" 
-                />
+                <Tag :value="selectedCashRegister.status.toUpperCase()"
+                  :severity="getStatusSeverity(selectedCashRegister.status)" />
               </div>
             </div>
           </Message>
@@ -87,19 +70,9 @@
               <i class="pi pi-money-bill mr-2"></i>
               Monto de Apertura
             </label>
-            <InputNumber
-              id="opening-amount"
-              v-model="openingAmount"
-              mode="currency"
-              currency="PEN"
-              locale="es-PE"
-              placeholder="Ingrese el monto inicial de caja"
-              class="w-full"
-              :class="{ 'p-invalid': errors.opening_amount }"
-              :min="0"
-              :minFractionDigits="2"
-              :maxFractionDigits="2"
-            />
+            <InputNumber id="opening-amount" v-model="openingAmount" mode="currency" currency="PEN" locale="es-PE"
+              placeholder="Ingrese el monto inicial de caja" class="w-full"
+              :class="{ 'p-invalid': errors.opening_amount }" :min="0" :minFractionDigits="2" :maxFractionDigits="2" />
             <small v-if="errors.opening_amount" class="p-error block mt-2">
               {{ errors.opening_amount }}
             </small>
@@ -108,19 +81,10 @@
             </small>
           </div>
 
-          <Button
-            label="Aperturar Caja"
-            icon="pi pi-lock-open"
-            @click="openCashRegister"
-            :loading="isOpening"
-            :disabled="!selectedCashRegister || !openingAmount"
-            severity="contrast"
-            class="w-full"
-          />
-
+          <Button label="Aperturar Caja" icon="pi pi-lock-open" @click="openCashRegister" :loading="isOpening"
+            :disabled="!selectedCashRegister || !openingAmount" severity="contrast" class="w-full" />
         </div>
       </div>
-
     </div>
 
     <Message severity="warn" :closable="false" class="mt-4">
@@ -136,13 +100,12 @@
         </ul>
       </div>
     </Message>
-
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { usePage, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import Avatar from 'primevue/avatar';
 import Dropdown from 'primevue/dropdown';
@@ -167,6 +130,7 @@ interface CashRegister {
   name: string;
   status: string;
   is_active: boolean;
+  opened_by: string;
   sub_branch?: {
     id: string;
     name: string;
@@ -184,14 +148,10 @@ const authenticatedUser = computed(() => page.props.auth?.user as User);
 
 const getStatusSeverity = (status: string) => {
   switch (status) {
-    case 'abierta':
-      return 'success';
-    case 'cerrada':
-      return 'secondary';
-    case 'bloqueada':
-      return 'danger';
-    default:
-      return 'info';
+    case 'abierta': return 'success';
+    case 'cerrada': return 'secondary';
+    case 'bloqueada': return 'danger';
+    default: return 'info';
   }
 };
 
@@ -199,9 +159,9 @@ const loadCashRegisters = async () => {
   loadingCashRegisters.value = true;
   try {
     const response = await axios.get(route('cash.cash-registers.index'), {
-      params: {
-        status: 'cerrada',
-        is_active: true,
+      params: { 
+        status: 'cerrada', 
+        is_active: true, 
         per_page: 100
       }
     });
@@ -211,11 +171,11 @@ const loadCashRegisters = async () => {
     }
   } catch (error) {
     console.error('Error loading cash registers:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: 'Error al cargar las cajas disponibles',
-      life: 3000
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: 'Error al cargar las cajas disponibles', 
+      life: 3000 
     });
   } finally {
     loadingCashRegisters.value = false;
@@ -240,36 +200,32 @@ const openCashRegister = async () => {
   try {
     const response = await axios.post(
       route('cash.cash-registers.open', selectedCashRegister.value.id),
-      {
-        opening_amount: openingAmount.value
-      }
+      { opening_amount: openingAmount.value }
     );
 
     if (response.data.success) {
       toast.add({
         severity: 'success',
         summary: 'Éxito',
-        detail: 'Caja aperturada correctamente',
-        life: 3000
+        detail: 'Caja aperturada correctamente. Redirigiendo a habitaciones...',
+        life: 2000
       });
 
-      selectedCashRegister.value = null;
-      openingAmount.value = null;
-      await loadCashRegisters();
+      setTimeout(() => {
+        router.visit(route('online.view'));
+      }, 1500);
     }
   } catch (error: any) {
     console.error('Error opening cash register:', error);
-    
     if (error.response?.data?.errors) {
       errors.value = error.response.data.errors;
     }
-    
     const errorMessage = error.response?.data?.message || 'Error al aperturar la caja';
-    toast.add({
-      severity: 'error',
-      summary: 'Error',
-      detail: errorMessage,
-      life: 3000
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: errorMessage, 
+      life: 3000 
     });
   } finally {
     isOpening.value = false;

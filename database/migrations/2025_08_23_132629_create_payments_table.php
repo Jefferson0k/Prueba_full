@@ -16,7 +16,7 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->decimal('exchange_rate', 12, 6)->default(1.000000);
             $table->decimal('amount_base_currency', 10, 2); // Monto en moneda base
-            $table->enum('payment_method', ['cash', 'card', 'transfer', 'check', 'other']);
+            $table->enum('payment_method', ['cash', 'card', 'debit_card', 'credit_card', 'transfer', 'yape', 'plin', 'check', 'other']);
             $table->string('reference')->nullable();
             $table->datetime('payment_date');
             $table->text('notes')->nullable();

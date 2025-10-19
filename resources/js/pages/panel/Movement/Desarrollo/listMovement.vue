@@ -6,14 +6,25 @@
         <template #header>
             <div class="flex flex-wrap gap-2 items-center justify-between">
                 <h4 class="m-0">Movimientos</h4>
-                <IconField>
-                    <InputIcon>
-                        <i class="pi pi-search" />
-                    </InputIcon>
-                    <InputText v-model="searchQuery" placeholder="Buscar movimientos..." @input="onSearch" />
-                    <Button icon="pi pi-refresh" @click="loadMovements" :loading="loading" severity="contrast" rounded variant="outlined"
-                        v-tooltip="'Actualizar'" />
-                </IconField>
+                <div class="flex gap-2 items-center">
+                    <!-- Filtro por tipo de movimiento -->
+                    <SelectButton 
+                        v-model="selectedMovementType" 
+                        :options="movementTypeOptions" 
+                        optionLabel="label"
+                        optionValue="value"
+                        @change="onMovementTypeChange"
+                    />
+                    
+                    <IconField>
+                        <InputIcon>
+                            <i class="pi pi-search" />
+                        </InputIcon>
+                        <InputText v-model="searchQuery" placeholder="Buscar movimientos..." @input="onSearch" />
+                        <Button icon="pi pi-refresh" @click="loadMovements" :loading="loading" severity="contrast" rounded variant="outlined"
+                            v-tooltip="'Actualizar'" />
+                    </IconField>
+                </div>
             </div>
         </template>
         <template #loading>
@@ -21,7 +32,20 @@
                 <ProgressSpinner style="width:50px;height:50px" strokeWidth="8" />
             </div>
         </template>
+    
     <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+        
+        <!-- NUEVA COLUMNA: Tipo de Movimiento -->
+        <Column field="movement_type" header="Tipo" sortable style="min-width: 6rem">
+            <template #body="slotProps">
+                <Tag 
+                    :value="getMovementTypeLabel(slotProps.data.movement_type)" 
+                    :severity="getMovementTypeSeverity(slotProps.data.movement_type)" 
+                    class="text-sm" 
+                />
+            </template>
+        </Column>
+        
         <Column field="code" header="Código" sortable style="min-width: 6rem">
             <template #body="slotProps">
                 <span class="font-semibold text-primary">
@@ -63,7 +87,7 @@
             </template>
         </Column>
         
-        <Column field="credit_date" header="Fecha de Crédito" sortable style="min-width: 8rem">
+        <Column field="credit_date" header="Fecha de Crédito" sortable style="min-width: 11rem">
             <template #body="slotProps">
                 <span :class="{ 'text-gray-400 italic': !slotProps.data.credit_date }">
                     {{ slotProps.data.credit_date || 'No aplica' }}
@@ -71,7 +95,7 @@
             </template>
         </Column>
         
-        <Column field="date" header="Fecha Emisión" sortable style="min-width: 8rem">
+        <Column field="date" header="Fecha Emisión" sortable style="min-width: 9rem">
             <template #body="slotProps">
                 <span :class="{ 'text-red-500': !slotProps.data.date }">
                     {{ slotProps.data.date || 'Sin fecha' }}
@@ -163,7 +187,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
-import { router } from '@inertiajs/vue3'; // Importar router de Inertia
+import { router } from '@inertiajs/vue3';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
@@ -173,6 +197,7 @@ import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import Menu from 'primevue/menu';
 import ProgressSpinner from 'primevue/progressspinner';
+import SelectButton from 'primevue/selectbutton';
 import { useToast } from 'primevue/usetoast';
 import { defineProps, defineEmits } from 'vue';
 import IconField from 'primevue/iconfield';
@@ -199,6 +224,16 @@ const deleteDialog = ref(false);
 const movementToDelete = ref(null);
 const actionsMenu = ref();
 const selectedMovement = ref(null);
+
+// NUEVO: Filtro por tipo de movimiento
+const selectedMovementType = ref('ingreso'); // Por defecto muestra ingresos
+
+// OPCIONES PARA TIPO DE MOVIMIENTO
+const movementTypeOptions = [
+    { label: 'Ingresos', value: 'ingreso' },
+    { label: 'Egresos', value: 'egreso' },
+    { label: 'Todos', value: 'todos' }
+];
 
 // Elementos del menú de acciones
 const actionMenuItems = ref([
@@ -227,6 +262,22 @@ const actionMenuItems = ref([
 let searchTimeout = null;
 
 // Funciones de utilidad para validación y formato
+
+// NUEVA: Obtener etiqueta del tipo de movimiento
+function getMovementTypeLabel(type) {
+    if (!type) return 'Sin tipo';
+    const types = {
+        'ingreso': 'Ingreso',
+        'egreso': 'Egreso'
+    };
+    return types[type] || type;
+}
+
+// NUEVA: Obtener severity del tipo de movimiento
+function getMovementTypeSeverity(type) {
+    if (!type) return 'danger';
+    return type === 'ingreso' ? 'success' : 'warning';
+}
 
 // Formatear moneda
 function formatCurrency(value) {
@@ -309,6 +360,12 @@ function editMovement(movement) {
     });
 }
 
+// NUEVA: Manejar cambio de tipo de movimiento
+function onMovementTypeChange() {
+    currentPage.value = 1;
+    loadMovements(1, searchQuery.value);
+}
+
 // Cargar movimientos con validación
 async function loadMovements(page = 1, search = '') {
     loading.value = true;
@@ -316,6 +373,11 @@ async function loadMovements(page = 1, search = '') {
         const params = new URLSearchParams();
         if (search) params.append('search', search);
         if (page > 1) params.append('page', page);
+        
+        // NUEVO: Agregar filtro por tipo de movimiento
+        if (selectedMovementType.value !== 'todos') {
+            params.append('movement_type', selectedMovementType.value);
+        }
 
         const url = `/movements${params.toString() ? '?' + params.toString() : ''}`;
         const response = await axios.get(url);
@@ -324,6 +386,7 @@ async function loadMovements(page = 1, search = '') {
         movements.value = (response.data.data || []).map(movement => ({
             ...movement,
             // Asegurar que los campos críticos tengan valores por defecto
+            movement_type: movement.movement_type || 'ingreso', // NUEVO: valor por defecto
             code: movement.code || null,
             voucher_type: movement.voucher_type || null,
             payment_type: movement.payment_type || null,

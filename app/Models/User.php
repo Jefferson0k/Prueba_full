@@ -62,4 +62,33 @@ class User extends Authenticatable
     {
         return $this->hasMany(Inventario::class, 'usuario_id');
     }
+    // Relación con pagos
+    public function pagos()
+    {
+        return $this->hasMany(PagoPersonal::class, 'user_id');
+    }
+
+    // Relación con sucursal
+    public function sucursal()
+    {
+        return $this->belongsTo(SubBranch::class, 'sub_branch_id');
+    }
+
+    // Método auxiliar para obtener total pagado
+    public function totalPagado($periodo = null)
+    {
+        $query = $this->pagos()->where('estado', 'pagado');
+        
+        if ($periodo) {
+            $query->where('periodo', $periodo);
+        }
+        
+        return $query->sum('monto');
+    }
+
+    // Scope para filtrar por sucursal
+    public function scopePorSucursal($query, $subBranchId)
+    {
+        return $query->where('sub_branch_id', $subBranchId);
+    }
 }

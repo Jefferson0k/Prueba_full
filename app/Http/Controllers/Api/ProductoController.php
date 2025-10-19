@@ -5,13 +5,17 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Products\StoreProductRequest;
 use App\Http\Requests\Products\UpdateProductRequest;
+use App\Http\Resources\Product\ProductResource;
 use App\Http\Resources\Producto\ProductoResource;
 use App\Jobs\AssignProductToSubBranches;
 use App\Jobs\UpdateSubBranchProductsFraction;
 use App\Models\Product;
+use App\Models\SubBranchProduct;
 use App\Pipelines\FilterByCategory;
 use App\Pipelines\FilterByName;
 use App\Pipelines\FilterByState;
+use App\Pipelines\Product\FilterByNameOrCode;
+use App\Pipelines\Product\FilterByStock;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Pipeline\Pipeline;
@@ -97,5 +101,28 @@ class ProductoController extends Controller{
             'state' => true,
             'message' => 'Producto eliminado correctamente',
         ]);
+    }
+    public function searchProducto(){
+        $user = Auth::user();
+        if (!$user || !$user->sub_branch_id) {
+            return response()->json([
+                'message' => 'El usuario no tiene una sub-sucursal asignada.',
+            ], 403);
+        }
+        $perPage = request('per_page', 10);
+        $query = app(Pipeline::class)
+            ->send(
+                SubBranchProduct::with('product', 'subBranch')
+                    ->active()
+                    ->bySubBranch($user->sub_branch_id)
+                    ->whereHas('product', fn($q) => $q->where('is_active', true))
+            )
+            ->through([
+                FilterByNameOrCode::class,
+                FilterByStock::class,
+            ])
+            ->thenReturn();
+        $productos = $query->paginate($perPage);
+        return ProductResource::collection($productos);
     }
 }

@@ -20,6 +20,7 @@ const model = computed(() => [
             hasPermission('view branches') && { label: 'Sucursales', icon: 'pi pi-fw pi-building', to: '/panel/sucursales' },
             hasPermission('view caja') && { label: 'Cajas', icon: 'pi pi-fw pi-sitemap', to: '/panel/cajas' },
             hasPermission('ver tipos de habitación') && { label: 'Tipos de Habitación', icon: 'pi pi-fw pi-th-large', to: '/panel/tipos-habitacion' },
+            { label: 'Tipos de Habitación', icon: 'pi pi-fw pi-th-large', to: '/panel/tipos-habitacion' },
         ].filter(Boolean),
     },
     {
@@ -38,7 +39,7 @@ const model = computed(() => [
     {
         label: 'Pagos',
         items: [
-            hasPermission('view payments') && { label: 'Gestión de Pagos', icon: 'pi pi-fw pi-credit-card', to: '/panel/pagos' },
+            hasPermission('view payments') && { label: 'Gestión de Pagos', icon: 'pi pi-fw pi-credit-card', to: '/panel/pagos/personal' },
             hasPermission('refund payments') && { label: 'Reembolsos', icon: 'pi pi-fw pi-refresh', to: '/panel/pagos/reembolsos' },
         ].filter(Boolean),
     },
@@ -84,9 +85,14 @@ const model = computed(() => [
     {
         label: 'Reportes',
         items: [
-            hasPermission('ver reportes') && { label: 'Reporte de Ocupación', icon: 'pi pi-fw pi-chart-bar', to: '/panel/reportes/ocupacion' },
-            hasPermission('ver reportes') && { label: 'Reporte de Ingresos', icon: 'pi pi-fw pi-chart-line', to: '/panel/reportes/ingresos' },
-            hasPermission('ver reportes') && { label: 'Reporte de Inventario', icon: 'pi pi-fw pi-chart-pie', to: '/panel/reportes/inventario' },
+            { label: 'Ingresos de Habitaciones', icon: 'pi pi-fw pi-home', to: '/panel/reportes/ingresos-habitaciones' },
+            { label: 'Ingreso de Productos', icon: 'pi pi-fw pi-shopping-cart', to: '/panel/reportes/ingreso-productos' },
+            { label: 'Ingreso Bruto', icon: 'pi pi-fw pi-chart-line', to: '/panel/reportes/ingreso-bruto' },
+            { label: 'Egresos', icon: 'pi pi-fw pi-money-bill', to: '/panel/reportes/egresos' },
+            { label: 'Ingreso Neto', icon: 'pi pi-fw pi-chart-bar', to: '/panel/reportes/ingreso-neto' },
+            { label: 'Número de Clientes', icon: 'pi pi-fw pi-users', to: '/panel/reportes/numero-clientes' },
+            { label: 'Productos Más Vendidos', icon: 'pi pi-fw pi-star', to: '/panel/reportes/productos-mas-vendidos' },
+            { label: 'Productos Menos Vendidos', icon: 'pi pi-fw pi-chart-pie', to: '/panel/reportes/productos-menos-vendidos' },
         ].filter(Boolean),
     },
     {

@@ -1,5 +1,5 @@
 <template>
-  <Head title="Aperturar Caja" />
+  <Head title="Gestion de habitaciones" />
   <AppLayout>
     <div>
       <template v-if="isLoading">
@@ -7,6 +7,7 @@
       </template>
       <template v-else>
         <div class="card">
+          <searcheHabitaciones/>
           <listHabitaciones />
         </div>
       </template>
@@ -20,7 +21,7 @@ import AppLayout from '@/layout/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import Espera from '@/components/Espera.vue';
 import listHabitaciones from './Desarrollo/listHabitaciones.vue';
-
+import searcheHabitaciones from './Desarrollo/searcheHabitaciones.vue';
 const isLoading = ref(true);
 
 onMounted(() => {

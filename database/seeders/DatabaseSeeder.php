@@ -3,6 +3,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\PaymentMethod;
 use App\Models\Provider;
 use Illuminate\Database\Seeder;
 
@@ -30,7 +31,8 @@ class DatabaseSeeder extends Seeder{
         // Estructura de hotel
         $this->call([
             BranchSeeder::class,        // Sucursales
-            RoomTypeSeeder::class
+            RoomTypeSeeder::class,
+            PaymentMethodSeeder::class
             #SubBranchSeeder::class,
             #FloorSeeder::class,         // Pisos
             #RoomSeeder::class,          // Habitaciones

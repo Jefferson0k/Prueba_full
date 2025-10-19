@@ -18,8 +18,8 @@ class Payment extends Model implements Auditable
 
     protected $fillable = [
         'payment_code', 'booking_id', 'currency_id', 'amount', 'exchange_rate',
-        'amount_base_currency', 'payment_method', 'reference', 'payment_date',
-        'notes', 'status'
+        'amount_base_currency', 'payment_method', 'payment_method_id', 'reference',
+        'operation_number', 'cash_register_id', 'payment_date', 'notes', 'status'
     ];
 
     protected $casts = [
@@ -45,7 +45,26 @@ class Payment extends Model implements Auditable
     {
         return $this->belongsTo(Booking::class);
     }
+    public function paymentMethod()
+    {
+        return $this->belongsTo(PaymentMethod::class);
+    }
 
+    public function cashRegister()
+    {
+        return $this->belongsTo(CashRegister::class);
+    }
+
+    // NUEVOS SCOPES
+    public function scopeByCashRegister($query, $cashRegisterId)
+    {
+        return $query->where('cash_register_id', $cashRegisterId);
+    }
+
+    public function scopeByPaymentMethod($query, $paymentMethodId)
+    {
+        return $query->where('payment_method_id', $paymentMethodId);
+    }
     public function currency()
     {
         return $this->belongsTo(Currency::class);

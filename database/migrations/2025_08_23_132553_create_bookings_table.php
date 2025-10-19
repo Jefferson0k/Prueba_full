@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid('customers_id'); // El cliente a nombre de quien está
             $table->uuid('rate_type_id'); // Tipo de tarifa (por hora, por noche, etc)
             $table->uuid('currency_id');
-            
+            $table->uuid('sub_branch_id');
             // TIEMPO Y FECHAS
             $table->datetime('check_in'); // Cuando entró
             $table->datetime('check_out'); // Cuando debe salir (check_in + horas contratadas)
@@ -56,7 +56,7 @@ return new class extends Migration
             $table->string('voucher_number')->nullable(); // Serie y correlativo
             
             $table->text('notes')->nullable();
-            
+            $table->integer('updated_by')->nullable()->after('paid_amount');
             // AUDITORÍA
             $table->unsignedBigInteger('created_by')->nullable(); // Quien registró la entrada
             $table->unsignedBigInteger('finished_by')->nullable(); // Quien finalizó

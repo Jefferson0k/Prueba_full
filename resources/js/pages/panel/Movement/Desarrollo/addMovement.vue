@@ -8,6 +8,20 @@
     <Dialog v-model:visible="movementDialog" :style="{ width: '500px' }" header="Registro de Movimientos" :modal="true">
         <div class="flex flex-col gap-6">
 
+            <!-- TIPO DE MOVIMIENTO (NUEVO) -->
+            <div class="col-span-12">
+                <label class="block font-bold mb-2">
+                    Tipo de Movimiento <span class="text-red-500">*</span>
+                </label>
+                <SelectButton v-model="movement.movement_type" :options="movementTypeOptions" optionLabel="label"
+                    optionValue="value"
+                    :class="{ 'p-invalid': submitted && (!movement.movement_type || serverErrors.movement_type) }" />
+                <small v-if="submitted && !movement.movement_type" class="text-red-500">El tipo de movimiento es
+                    obligatorio.</small>
+                <small v-else-if="serverErrors.movement_type" class="text-red-500">{{ serverErrors.movement_type[0]
+                    }}</small>
+            </div>
+
             <!-- Tipo de Comprobante -->
             <div class="col-span-6">
                 <label class="block font-bold mb-2">
@@ -21,6 +35,7 @@
                 <small v-else-if="serverErrors.voucher_type" class="text-red-500">{{ serverErrors.voucher_type[0]
                     }}</small>
             </div>
+
             <div class="col-span-6">
                 <label for="code" class="block font-bold mb-2">
                     Código <span class="text-red-500">*</span>
@@ -147,6 +162,7 @@ const selectedProvider = ref(null);
 const providerSuggestions = ref([]);
 
 const movement = ref({
+    movement_type: 'ingreso', // POR DEFECTO INGRESO
     code: '',
     date: null,
     provider_id: '',
@@ -155,6 +171,12 @@ const movement = ref({
     includes_igv: true,
     voucher_type: 'guia',
 });
+
+// OPCIONES PARA TIPO DE MOVIMIENTO
+const movementTypeOptions = [
+    { label: 'Ingreso', value: 'ingreso' },
+    { label: 'Egreso', value: 'egreso' },
+];
 
 const paymentTypeOptions = [
     { label: 'Contado', value: 'contado' },
@@ -173,7 +195,8 @@ const voucherTypeOptions = [
 ];
 
 const isFormValid = computed(() => {
-    const basic = movement.value.code &&
+    const basic = movement.value.movement_type && // NUEVO CAMPO
+        movement.value.code &&
         movement.value.date &&
         movement.value.provider_id &&
         movement.value.payment_type &&
@@ -221,6 +244,7 @@ async function searchProviders(event) {
 
 function resetMovement() {
     movement.value = {
+        movement_type: 'ingreso', // POR DEFECTO INGRESO
         code: '',
         date: null,
         provider_id: '',
@@ -255,7 +279,6 @@ function formatDateForBackend(date) {
     }
     return null;
 }
-
 
 async function guardarMovement() {
     submitted.value = true;

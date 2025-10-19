@@ -10,14 +10,14 @@ return new class extends Migration
     {
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('auditable_type'); // Modelo afectado
-            $table->uuid('auditable_id'); // ID del registro afectado
-            $table->string('event'); // created, updated, deleted, restored
-            $table->json('old_values')->nullable(); // Valores anteriores
-            $table->json('new_values')->nullable(); // Valores nuevos
+            $table->string('auditable_type');
+            $table->uuid('auditable_id');
+            $table->string('event');
+            $table->json('old_values')->nullable();
+            $table->json('new_values')->nullable();
             $table->string('ip_address', 45)->nullable();
             $table->string('user_agent')->nullable();
-            $table->uuid('user_id')->nullable(); // Usuario que realizó la acción
+            $table->bigInteger('user_id')->nullable(); // <-- Cambio aquí
             $table->timestamps();
             
             // Índices

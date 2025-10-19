@@ -25,6 +25,7 @@ class Movement extends Model implements AuditableContract
         'credit_date',
         'includes_igv',
         'voucher_type',
+        'movement_type',
         'created_by',
         'updated_by',
         'deleted_by'

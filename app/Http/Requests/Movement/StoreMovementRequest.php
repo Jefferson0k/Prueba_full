@@ -19,6 +19,8 @@ class StoreMovementRequest extends FormRequest
 
             'provider_id'   => ['required', 'exists:providers,id'],
 
+            'movement_type'  => ['required', 'in:ingreso,egreso'],
+
             'payment_type'  => ['required', 'in:credito,contado'],
             'credit_date'   => ['required_if:payment_type,credito', 'nullable', 'date'],
             'includes_igv'  => ['required', 'boolean'],

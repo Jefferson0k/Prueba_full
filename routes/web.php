@@ -11,14 +11,21 @@ use App\Http\Controllers\Api\RolesController;
 use App\Http\Controllers\Api\TipoHabitacionController;
 use App\Http\Controllers\Api\UsoHabitacionController;
 use App\Http\Controllers\Api\UsuariosController;
+use App\Http\Controllers\Panel\BookingConsumptionController;
+use App\Http\Controllers\Panel\BookingController;
 use App\Http\Controllers\Panel\BranchController;
 use App\Http\Controllers\Panel\CashRegisterController;
+use App\Http\Controllers\Panel\CurrencyController;
 use App\Http\Controllers\Panel\CustomerController;
 use App\Http\Controllers\Panel\FloorController;
 use App\Http\Controllers\Panel\kardexController;
 use App\Http\Controllers\Panel\MovementDetailController;
 use App\Http\Controllers\Panel\MovementsController;
+use App\Http\Controllers\Panel\PagoPersonalController;
+use App\Http\Controllers\Panel\PaymentController;
 use App\Http\Controllers\Panel\ProviderController;
+use App\Http\Controllers\Panel\RateTypeController;
+use App\Http\Controllers\Panel\ReportController;
 use App\Http\Controllers\Panel\RoomController;
 use App\Http\Controllers\Panel\RoomTypeController;
 use App\Http\Controllers\Panel\SubBranchController;
@@ -37,10 +44,20 @@ use App\Http\Controllers\Web\Habitaciones\habitacionesWeb;
 use App\Http\Controllers\Web\Inventario\InventarioWeb;
 use App\Http\Controllers\Web\Kardex\kardexWeb;
 use App\Http\Controllers\Web\Movements\MovementsWeb;
+use App\Http\Controllers\Web\PagoPersonal\PagoPersonalWeb;
 use App\Http\Controllers\Web\Piso\PisoWeb;
 use App\Http\Controllers\Web\Producto\ProductoWeb;
+use App\Http\Controllers\Web\Reportes\EgresoWeb;
+use App\Http\Controllers\Web\Reportes\IngresoBrutoWeb;
+use App\Http\Controllers\Web\Reportes\IngresoNetoWeb;
+use App\Http\Controllers\Web\Reportes\IngresoProducto;
+use App\Http\Controllers\Web\Reportes\IngressoHabitacionWeb;
+use App\Http\Controllers\Web\Reportes\NumeroClientesWeb;
+use App\Http\Controllers\Web\Reportes\ProductosMasVendidosWeb;
+use App\Http\Controllers\Web\Reportes\ProductosMenosVendidosWeb;
 use App\Http\Controllers\Web\Room\RoomFloorWeb;
 use App\Http\Controllers\Web\Room\RoomWeb;
+use App\Http\Controllers\Web\RoomType\RoomtypeWeb;
 use App\Http\Controllers\Web\SystemSetting\SystemSettingWeb;
 use App\Http\Controllers\Web\UsuarioWebController;
 use Illuminate\Support\Facades\Route;
@@ -51,7 +68,7 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified','cash.register.open'])->group(function () {
     #PARA QUE CUANDO SE CREA UN USUARIO O MODIFICA SU PASSWORD LO REDIRECCIONE PARA QUE PUEDA ACTUALIZAR
     Route::get('/dashboard', function () {
         $user = Auth::user();
@@ -62,7 +79,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     # VISTAS DEL FRONTEND
     Route::prefix('panel')->group(function () {
+        Route::get('/reportes/ingresos-habitaciones', [IngressoHabitacionWeb::class, 'view'])->name('ingresos.view');
+        Route::get('/reportes/ingreso-productos', [IngresoProducto::class, 'view'])->name('ingreso.view');
+        Route::get('/reportes/ingreso-bruto', [IngresoBrutoWeb::class, 'view'])->name('ingreso.bruto.view');
+        Route::get('/reportes/egresos', [EgresoWeb::class, 'view'])->name('egresos.view');
+        Route::get('/reportes/ingreso-neto', [IngresoNetoWeb::class, 'view'])->name('ingreso.neto.view');
+        Route::get('/reportes/numero-clientes', [NumeroClientesWeb::class, 'view'])->name('numero.view');
+        Route::get('/reportes/productos-mas-vendidos', [ProductosMasVendidosWeb::class, 'view'])->name('productos.vendidos.view');
+        Route::get('/reportes/productos-menos-vendidos', [ProductosMenosVendidosWeb::class, 'view'])->name('menos.view');
 
+        Route::get('/pagos/personal', [PagoPersonalWeb::class, 'view'])->name('pagos.view');
+
+        Route::get('/tipos-habitacion', [RoomtypeWeb::class, 'view'])->name('kardex.view');
         Route::get('/inventario', [InventarioWeb::class, 'view'])->name('kardex.view');
         Route::get('/cajas', [CashWeb::class, 'view'])->name('cajas.view');
         Route::get('/habitaciones', [habitacionesWeb::class, 'view'])->name('habitaciones.view');
@@ -102,6 +130,76 @@ Route::middleware(['auth', 'verified'])->group(function () {
         # 🔹 Horarios y configuración del sistema
         Route::get('/horarios', [HorarioWeb::class, 'view'])->name('horarios.index');
         Route::get('/configuracion', [SystemSettingWeb::class, 'view'])->name('configuracion.index');
+    });
+
+    Route::prefix('reports')->group(function () {
+        Route::get('/ingresos-habitaciones', [ReportController::class, 'ingresosHabitaciones']);
+        Route::get('/ingreso-productos', [ReportController::class, 'ingresoProductos']);
+        Route::get('/ingreso-bruto', [ReportController::class, 'ingresoBruto']);
+        Route::get('/numero-clientes', [ReportController::class, 'numeroClientes']);
+        Route::get('/productos-mas-vendidos', [ReportController::class, 'productosMasVendidos']);
+        Route::get('/productos-menos-vendidos', [ReportController::class, 'productosMenosVendidos']);
+        
+        Route::get('/booking-consumptions', [BookingConsumptionController::class, 'index']);
+        Route::get('/ingreso-bruto-comparativa', [ReportController::class, 'ingresoBrutoComparativa']);
+        Route::get('/egresos-top-proveedores', [ReportController::class, 'egresosTopProveedores']);
+
+        Route::get('/ingresos-habitaciones-grafica', [ReportController::class, 'ingresosHabitacionesGrafica']);
+        Route::get('/ingreso-productos-grafica', [ReportController::class, 'ingresoProductosGrafica']);
+        Route::get('/egresos-grafica', [ReportController::class, 'egresosGrafica']);
+
+        Route::get('/egresos', [ReportController::class, 'egresos']);
+        Route::get('/egresos-detalle', [ReportController::class, 'egresosDetalle']);
+        Route::get('/egresos-grafica', [ReportController::class, 'egresosGrafica']);
+        Route::get('/egresos-distribucion', [ReportController::class, 'egresosDistribucion']);
+
+        Route::get('/ingreso-neto', [ReportController::class, 'ingresoNeto']);
+        Route::get('/ingreso-neto-grafica', [ReportController::class, 'ingresoNetoGrafica']);
+        Route::get('/ingreso-neto-comparativa', [ReportController::class, 'ingresoNetoComparativa']);
+        Route::get('/ingreso-neto-distribucion', [ReportController::class, 'ingresoNetoDistribucion']);
+
+        Route::get('/clientes-totales', [ReportController::class, 'clientesTotales']);
+        Route::get('/clientes-mensual', [ReportController::class, 'clientesMensual']);
+        Route::get('/clientes-diarios/{year}/{month}', [ReportController::class, 'clientesDiarios']);
+
+        Route::get('/mas-vendidos', [ReportController::class, 'productosMasVendidos']);
+        Route::get('/mas-vendidos-grafica', [ReportController::class, 'productosMasVendidosGrafica']);
+        Route::get('/por-categoria', [ReportController::class, 'productosPorCategoria']);
+        Route::get('/evolucion-ventas', [ReportController::class, 'evolucionVentasMensual']);
+        Route::get('/mejor-rendimiento', [ReportController::class, 'productosMejorRendimiento']);
+
+        Route::get('/menos-vendidos', [ReportController::class, 'productosMenosVendidos']);
+        Route::get('/menos-vendidos-grafica', [ReportController::class, 'productosMenosVendidosGrafica']);
+        Route::get('/sin-ventas', [ReportController::class, 'productosSinVentas']);
+        Route::get('/comparativa-ventas', [ReportController::class, 'comparativaVentasSimple']); // Usar el método simple
+        Route::get('/comparativa-ventas-grafica', [ReportController::class, 'comparativaVentasGrafica']);
+        Route::get('/analisis-rendimiento', [ReportController::class, 'analisisRendimientoProductos']);
+        Route::get('/bajo-rendimiento', [ReportController::class, 'productosBajoRendimiento']);
+
+    });
+
+    Route::prefix('pagos')->group(function () {
+        Route::get('/', [PagoPersonalController::class, 'index']);
+        Route::post('/', [PagoPersonalController::class, 'store']);
+    });
+
+    Route::get('rate-types', [RateTypeController::class, 'index']);
+    
+    Route::get('currencies', [CurrencyController::class, 'index']);
+
+    Route::apiResource('bookings', BookingController::class);
+    Route::prefix('bookings/{id}')->group(function () {
+        Route::post('/payments', [BookingController::class, 'addPayment']);
+        Route::post('/consumptions', [BookingController::class, 'addConsumption']);
+        Route::post('/finish', [BookingController::class, 'finishBooking']);
+        Route::post('/cancel', [BookingController::class, 'cancelBooking']);
+        Route::get('/payments', [BookingController::class, 'getBookingPayments']);
+        Route::get('/consumptions', [BookingController::class, 'getBookingConsumptions']);
+    });
+    
+    Route::prefix('payments')->group(function () {
+        Route::get('/user-cash-register', [PaymentController::class, 'getUserCashRegister']);
+        Route::get('/methods', [PaymentController::class, 'getPaymentMethods']);
     });
 
     Route::prefix('floors-rooms')->group(function () {
@@ -155,9 +253,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     #ROOM TYPE => BACKEND
     Route::prefix('room-types')->group(function () {
-        Route::get('/', [RoomTypeController::class, 'index'])->name('branches.index');
+        Route::get('/', [RoomTypeController::class, 'index'])->name('room.index');
+        Route::post('/', [RoomTypeController::class, 'store'])->name('room.store');
+        Route::get('/{roomType}', [RoomTypeController::class, 'show'])->name('room.show');
+        Route::put('/{roomType}', [RoomTypeController::class, 'update'])->name('room.update');
+        Route::delete('/{roomType}', [RoomTypeController::class, 'destroy'])->name('room.destroy');
     });
-
+    
     #CONSULTAS DE DNI => BACKEND
     Route::get('/consulta/{dni}', [ConsultasDni::class, 'consultar'])->name('consultar.dni');
 
@@ -220,6 +322,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('producto')->group(function(){
         Route::get('/', [ProductoController::class, 'index'])->name('Productos.index');
         Route::post('/',[ProductoController::class, 'store'])->name('Productos.store');
+        Route::get('/search', [ProductoController::class, 'searchProducto'])->name('Productos.search');
         Route::get('/{product}',[ProductoController::class, 'show'])->name('Productos.show');
         Route::put('/{product}',[ProductoController::class, 'update'])->name('Productos.update');
         Route::delete('/{product}',[ProductoController::class, 'destroy'])->name('Productos.destroy');

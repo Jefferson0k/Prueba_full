@@ -8,7 +8,16 @@ use Illuminate\Routing\Controller;
 
 class CustomerController extends Controller{
     public function store(StoreCustomerRequest $request){
-        Customer::create($request->validated());
-        return response()->json(['message' => 'Cliente guardado con éxito.']);
+        $validated = $request->validated();
+        $customer = Customer::firstOrCreate(
+            ['document_number' => $validated['document_number']],
+            $validated
+        );
+        return response()->json([
+            'message' => $customer->wasRecentlyCreated
+                ? 'Cliente guardado con éxito.'
+                : 'Cliente ya estaba registrado. Se retornan sus datos.',
+            'data' => $customer
+        ]);
     }
 }
