@@ -37,8 +37,8 @@
                 
                 <!-- Botones -->
                 <div class="flex gap-2">
-                    <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
-                    <Button label="Guardar" icon="pi pi-check" :loading="loading" :disabled="!branch.name || loading"
+                    <Button label="Cancelar" icon="pi pi-times" severity="secondary" text @click="hideDialog" />
+                    <Button label="Guardar" icon="pi pi-check" severity="contrast" :loading="loading" :disabled="!branch.name || loading"
                         @click="guardarBranch" />
                 </div>
             </div>

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->text('description')->nullable();
             $table->enum('status', ['available', 'occupied', 'maintenance', 'cleaning'])->default('available');
+            $table->timestamp('status_changed_at')->nullable();
             $table->boolean('is_active')->default(true);
             
             // Auditoría

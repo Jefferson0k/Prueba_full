@@ -1,17 +1,9 @@
 <template>
-  <DataTable 
-    ref="dt" 
-    v-model:selection="selectedFloors" 
-    :value="floors" 
-    dataKey="id" 
-    :paginator="true" 
-    :rows="10"
+  <DataTable ref="dt" v-model:selection="selectedFloors" :value="floors" dataKey="id" :paginator="true" :rows="10"
     :filters="filters"
     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-    :rowsPerPageOptions="[5, 10, 25]"
-    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pisos"
-    class="p-datatable-sm"
-  >
+    :rowsPerPageOptions="[5, 10, 25]" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pisos"
+    class="p-datatable-sm">
     <template #header>
       <div class="flex flex-wrap gap-2 items-center justify-between">
         <h4 class="m-0">
@@ -28,7 +20,7 @@
     </template>
 
     <Column selectionMode="multiple" style="width: 3rem" :exportable="false" />
-    
+
     <Column field="floor_number" header="N°" sortable style="min-width: 4rem">
       <template #body="slotProps">
         <Tag :severity="getFloorNumberSeverity(slotProps.data.floor_number)">
@@ -36,16 +28,16 @@
         </Tag>
       </template>
     </Column>
-    
+
     <Column field="name" header="Nombre" sortable style="min-width: 12rem" />
-    
+
     <Column field="description" header="Descripción" style="min-width: 20rem">
       <template #body="slotProps">
         <span v-if="slotProps.data.description">{{ slotProps.data.description }}</span>
         <span v-else class="text-gray-400 italic">Sin descripción</span>
       </template>
     </Column>
-    
+
     <Column field="rooms_count" header="Habitaciones" sortable style="min-width: 8rem">
       <template #body="slotProps">
         <div class="flex items-center gap-2">
@@ -58,7 +50,7 @@
         </div>
       </template>
     </Column>
-    
+
     <Column field="is_active" header="Estado" sortable style="min-width: 5rem">
       <template #body="slotProps">
         <Tag :severity="slotProps.data.is_active ? 'success' : 'danger'">
@@ -66,121 +58,61 @@
         </Tag>
       </template>
     </Column>
-    
+
     <Column field="created_at" header="Creación" sortable style="min-width: 10rem">
       <template #body="slotProps">
         {{ formatDate(slotProps.data.created_at) }}
       </template>
     </Column>
-    
-    <Column header="Acciones" style="min-width: 12rem">
+
+    <Column header="Acciones" style="min-width: 4rem">
       <template #body="slotProps">
         <div class="flex gap-2">
           <!-- Botón Habitaciones -->
-          <Button 
-            icon="pi pi-building" 
-            rounded 
-            severity="info" 
-            variant="outlined" 
-            v-tooltip.top="'Gestionar Habitaciones'"
-            @click="onManageRooms(slotProps.data)" 
-          />
-          
-          <!-- Botón Ver Detalle -->
-          <Button 
-            icon="pi pi-eye" 
-            rounded 
-            severity="secondary" 
-            variant="outlined" 
-            v-tooltip.top="'Ver detalle'"
-            @click="onViewDetail(slotProps.data)" 
-          />
-          
+          <Button icon="pi pi-building" rounded severity="info" variant="outlined"
+            v-tooltip.top="'Gestionar Habitaciones'" @click="onManageRooms(slotProps.data)" />
+
           <!-- Botón Editar -->
-          <Button 
-            icon="pi pi-pencil" 
-            rounded 
-            severity="warning" 
-            variant="outlined" 
-            v-tooltip.top="'Editar'"
-            @click="onEdit(slotProps.data)" 
-          />
-          
+          <Button icon="pi pi-pencil" rounded severity="warng" variant="outlined" v-tooltip.top="'Editar'"
+            @click="onEdit(slotProps.data)" />
+
           <!-- Botón Eliminar -->
-          <Button 
-            icon="pi pi-trash" 
-            rounded 
-            severity="danger" 
-            variant="outlined" 
-            v-tooltip.top="'Eliminar'"
-            @click="onDelete(slotProps.data)" 
-          />
+          <Button icon="pi pi-trash" rounded severity="danger" variant="outlined" v-tooltip.top="'Eliminar'"
+            @click="onDelete(slotProps.data)" />
         </div>
       </template>
     </Column>
   </DataTable>
 
   <!-- Dialog para editar piso -->
-  <Dialog 
-    v-model:visible="showEditDialog" 
-    modal 
-    :style="{ width: '450px' }" 
-    header="Editar Piso"
-  >
+  <Dialog v-model:visible="showEditDialog" modal :style="{ width: '450px' }" header="Editar Piso">
     <form @submit.prevent="submitEdit" class="space-y-4" v-if="editingFloor">
       <div>
         <label for="edit_name" class="block text-sm font-medium mb-1">Nombre del Piso</label>
-        <InputText 
-          id="edit_name"
-          v-model="editForm.name" 
-          class="w-full"
-          :class="{ 'p-invalid': editErrors.name }"
-        />
+        <InputText id="edit_name" v-model="editForm.name" class="w-full" :class="{ 'p-invalid': editErrors.name }" />
         <small v-if="editErrors.name" class="p-error">{{ editErrors.name }}</small>
       </div>
 
       <div>
         <label for="edit_floor_number" class="block text-sm font-medium mb-1">Número de Piso</label>
-        <InputNumber 
-          id="edit_floor_number"
-          v-model="editForm.floor_number" 
-          class="w-full"
-          :class="{ 'p-invalid': editErrors.floor_number }"
-          :min="0"
-        />
+        <InputNumber id="edit_floor_number" v-model="editForm.floor_number" class="w-full"
+          :class="{ 'p-invalid': editErrors.floor_number }" :min="0" />
         <small v-if="editErrors.floor_number" class="p-error">{{ editErrors.floor_number }}</small>
       </div>
 
       <div>
         <label for="edit_description" class="block text-sm font-medium mb-1">Descripción</label>
-        <Textarea 
-          id="edit_description"
-          v-model="editForm.description" 
-          rows="3" 
-          class="w-full"
-        />
+        <Textarea id="edit_description" v-model="editForm.description" rows="3" class="w-full" />
       </div>
 
       <div class="flex items-center">
-        <Checkbox 
-          id="edit_is_active" 
-          v-model="editForm.is_active" 
-          binary 
-        />
+        <Checkbox id="edit_is_active" v-model="editForm.is_active" binary />
         <label for="edit_is_active" class="ml-2">Activo</label>
       </div>
 
       <div class="flex justify-end gap-2 pt-4">
-        <Button 
-          label="Cancelar" 
-          severity="secondary" 
-          @click="closeEditDialog" 
-        />
-        <Button 
-          label="Actualizar" 
-          type="submit" 
-          :loading="editLoading"
-        />
+        <Button label="Cancelar" severity="secondary" text @click="closeEditDialog" />
+        <Button label="Actualizar" type="submit" severity="contrast" :loading="editLoading" />
       </div>
     </form>
   </Dialog>
@@ -280,10 +212,6 @@ function onManageRooms(floor) {
   router.visit(`/panel/floors/${floor.id}/rooms`);
 }
 
-function onViewDetail(floor) {
-  // Lógica para ver detalle del piso
-  console.log('Ver detalle:', floor);
-}
 
 function onEdit(floor) {
   editingFloor.value = floor;
@@ -322,7 +250,7 @@ async function submitEdit() {
 
   } catch (error) {
     console.error('Error actualizando piso:', error);
-    
+
     if (error.response?.status === 422) {
       editErrors.value = error.response.data.errors;
     } else {
@@ -349,14 +277,14 @@ function onDelete(floor) {
     accept: async () => {
       try {
         await axios.delete(`/floors/${floor.id}`);
-        
+
         toast.add({
           severity: 'success',
           summary: 'Éxito',
           detail: 'Piso eliminado correctamente',
           life: 3000
         });
-        
+
         await fetchFloors();
       } catch (error) {
         console.error('Error eliminando piso:', error);

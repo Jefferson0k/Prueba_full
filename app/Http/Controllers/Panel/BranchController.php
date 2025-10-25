@@ -61,19 +61,17 @@ class BranchController extends Controller{
             return response()->json(['message' => 'Error al mostrar la sucursal.'], 500);
         }
     }
-    public function update(UpdateBranchRequest $request, $id){
+    public function update(UpdateBranchRequest $request, Branch $branch) {
         try {
-            $branch = Branch::findOrFail($id);
             Gate::authorize('update', $branch);
             $data = $request->validated();
             $data['updated_by'] = Auth::id();
             $branch->update($data);
+            
             return response()->json([
                 'message' => 'Sucursal actualizada correctamente.',
                 'data' => new BranchResource($branch)
             ]);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Sucursal no encontrada.'], 404);
         } catch (AuthorizationException $e) {
             return response()->json(['message' => 'No tienes permiso para editar esta sucursal.'], 403);
         } catch (Throwable $e) {

@@ -12,7 +12,7 @@
         <div class="flex flex-col sm:flex-row gap-3">
           <div class="flex flex-col">
             <label class="text-xs font-medium mb-1">Sucursal</label>
-            <Dropdown 
+            <Select 
               v-model="filtros.subBranchId"
               :options="sucursales"
               optionLabel="name"
@@ -235,7 +235,6 @@ import axios from 'axios';
 import Chart from 'primevue/chart';
 import Message from 'primevue/message';
 import Button from 'primevue/button';
-import Dropdown from 'primevue/dropdown';
 import Calendar from 'primevue/calendar';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -243,6 +242,7 @@ import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import ProgressSpinner from 'primevue/progressspinner';
 import { useToast } from 'primevue/usetoast';
+import Select from 'primevue/select';
 
 const toast = useToast();
 
@@ -250,7 +250,6 @@ const toast = useToast();
 const loading = ref(false);
 const productosMenosVendidos = ref([]);
 const productosSinVentas = ref([]);
-const comparativaVentas = ref([]);
 const sucursales = ref([]);
 
 const filtros = ref({

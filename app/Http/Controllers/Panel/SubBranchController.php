@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SubBranch\StoreSubBranchRequest;
+use App\Http\Requests\SubBranch\UpdateSubBranchRequest;
 use App\Http\Resources\SubBranch\SubBranchResource;
+use App\Http\Resources\SubBranch\SubBranchResourceShow;
 use App\Jobs\CreateSubBranchProducts;
 use App\Models\SubBranch;
-use App\Pipelines\SubBranch\OrderAlphabetically;
-use App\Pipelines\SubBranch\PrioritizeUserSubBranch;
 use App\Pipelines\SubBranch\SearchSubBranch;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\Auth;
@@ -104,7 +105,82 @@ class SubBranchController extends Controller{
         }
         return SubBranchResource::collection($subBranches);
     }
-    public function show(){}
-    public function delete(){}
-    public function update(){}
+    public function show($id){
+        try {
+            $subBranch = SubBranch::findOrFail($id);
+            
+            Gate::authorize('view', $subBranch);
+
+            return response()->json([
+                'data' => new SubBranchResourceShow($subBranch)
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Local no encontrado.'
+            ], 404);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'message' => 'No tienes permiso para ver este local.'
+            ], 403);
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Error al obtener el local.'
+            ], 500);
+        }
+    }
+    public function update(UpdateSubBranchRequest $request, SubBranch $sub_branch){
+        try {
+            $data = $request->validated();
+            $data['updated_by'] = Auth::id();
+            $sub_branch->update($data);
+            
+            return response()->json([
+                'message' => 'Local actualizado correctamente.',
+                'data' => new SubBranchResource($sub_branch)
+            ]);
+            
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'message' => 'No tienes permiso para editar este local.'
+            ], 403);
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Error al actualizar el local.'
+            ], 500);
+        }
+    }
+    public function destroy($id){
+        try {
+            $subBranch = SubBranch::findOrFail($id);
+            Gate::authorize('delete', $subBranch);
+            if ($subBranch->users()->exists()) {
+                return response()->json([
+                    'message' => 'No se puede eliminar el local porque tiene usuarios asignados.'
+                ], 422);
+            }
+            if ($subBranch->floors()->exists()) {
+                return response()->json([
+                    'message' => 'No se puede eliminar el local porque tiene pisos asignados.'
+                ], 422);
+            }
+            $subBranch->deleted_by = Auth::id();
+            $subBranch->save();
+            $subBranch->delete();
+            return response()->json([
+                'message' => 'Local eliminado correctamente.'
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Local no encontrado.'
+            ], 404);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'message' => 'No tienes permiso para eliminar este local.'
+            ], 403);
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'Error al eliminar el local.'
+            ], 500);
+        }
+    }
 }

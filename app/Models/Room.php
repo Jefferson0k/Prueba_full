@@ -16,7 +16,7 @@ class Room extends Model implements Auditable
     use HasFactory, HasUuids, SoftDeletes, HasAuditFields, \OwenIt\Auditing\Auditable;
 
     protected $fillable = [
-        'floor_id', 'room_type_id', 'room_number', 'name', 
+        'floor_id', 'room_type_id', 'room_number', 'name', 'status_changed_at',
         'description', 'status', 'is_active'
     ];
 

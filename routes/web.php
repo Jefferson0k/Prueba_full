@@ -275,17 +275,20 @@ Route::middleware(['auth', 'verified','cash.register.open'])->group(function () 
     Route::prefix('branches')->group(function () {
         Route::get('/', [BranchController::class, 'index'])->name('branches.index');
         Route::post('/', [BranchController::class, 'store'])->name('branches.store');
-        Route::get('/{branch}', [BranchController::class, 'show'])->name('branches.show');
-        Route::put('/{branch}', [BranchController::class, 'update'])->name('branches.update');
-        Route::delete('/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
+        Route::get('/{id}', [BranchController::class, 'show'])->name('branches.show');
+        Route::put('/{branch}', [BranchController::class, 'update']);
+        Route::delete('/{id}', [BranchController::class, 'delete'])->name('branches.delete');
     });
 
     # SUB BRANCH => BACKEND
     Route::prefix('sub-branches')->group(function () {
-        Route::get('/search', [SubBranchController::class, 'search'])
-            ->name('subbranches.search');
         Route::get('/{id}', [SubBranchController::class, 'index']);
-        Route::post('/', [SubBranchController::class, 'store']);
+        Route::get('/search', [SubBranchController::class, 'search'])->name('subbranches.search');
+        Route::get('/branch/{branchId}', [SubBranchController::class, 'index'])->name('subbranches.by-branch');
+        Route::get('/show/{id}', [SubBranchController::class, 'show'])->name('subbranches.show');
+        Route::post('/', [SubBranchController::class, 'store'])->name('subbranches.store');
+        Route::put('/{sub_branch}', [SubBranchController::class, 'update'])->name('subbranches.update');
+        Route::delete('/{id}', [SubBranchController::class, 'destroy'])->name('subbranches.delete');
     });
 
     Route::prefix('rooms')->controller(RoomController::class)->group(function () {

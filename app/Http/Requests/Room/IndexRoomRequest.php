@@ -2,12 +2,13 @@
 
 namespace App\Http\Requests\Room;
 
+use App\Models\Room;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class IndexRoomRequest extends FormRequest{
     public function authorize(): bool{
-        return $this->user()->can('viewAny', \App\Models\Room::class);
+        return $this->user()->can('viewAny', Room::class);
     }
     public function rules(): array{
         return [

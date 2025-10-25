@@ -2,12 +2,13 @@
 
 namespace App\Http\Requests\Room;
 
+use App\Models\Room;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class CreateRoomRequest extends FormRequest{
     public function authorize(): bool{
-        return $this->user()->can('create', \App\Models\Room::class);
+        return $this->user()->can('create', Room::class);
     }
     public function rules(): array{
         return [

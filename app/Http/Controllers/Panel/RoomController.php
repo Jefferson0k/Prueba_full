@@ -19,6 +19,7 @@ use App\Models\Room;
 use App\Support\ApiResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Throwable;
 
 class RoomController extends Controller{
@@ -28,6 +29,7 @@ class RoomController extends Controller{
     }
     public function index(IndexRoomRequest $request){
         try {
+            Gate::authorize('viewAny', Room::class);
             $query = Room::with([
                 'floor.subBranch',
                 'roomType',
@@ -59,6 +61,7 @@ class RoomController extends Controller{
     }
     public function store(CreateRoomRequest $request){
         try {
+            Gate::authorize('create', Room::class);
             $validatedData = $request->validated();
             $validatedData['status'] = $validatedData['status'] ?? 'available';
             $validatedData['is_active'] = $validatedData['is_active'] ?? true;

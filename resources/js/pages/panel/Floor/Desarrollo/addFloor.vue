@@ -1,7 +1,7 @@
 <template>
   <Toolbar class="mb-6">
     <template #start>
-      <Button label="Nuevo Piso" icon="pi pi-plus" class="mr-2" severity="contrast"  @click="showDialog = true" />
+      <Button label="Nuevo Piso" icon="pi pi-plus" class="mr-2" severity="contrast" @click="showDialog = true" />
     </template>
     <template #center>
       <h2 class="m-0 text-xl font-semibold">{{ subBranch.name }}</h2>
@@ -11,70 +11,37 @@
     </template>
   </Toolbar>
 
-  <Dialog 
-    v-model:visible="showDialog" 
-    modal 
-    :style="{ width: '450px' }" 
-    header="Agregar Nuevo Piso"
-  >
+  <Dialog v-model:visible="showDialog" modal :style="{ width: '450px' }" header="Agregar Nuevo Piso">
     <form @submit.prevent="submitForm" class="space-y-4">
       <div>
         <label for="name" class="block text-sm font-medium mb-1">Nombre del Piso</label>
-        <InputText 
-          id="name"
-          v-model="form.name" 
-          class="w-full"
-          :class="{ 'p-invalid': errors.name }"
-          placeholder="Ej: Primer Piso, Planta Baja"
-        />
+        <InputText id="name" v-model="form.name" class="w-full" :class="{ 'p-invalid': errors.name }"
+          placeholder="Ej: Primer Piso, Planta Baja" />
         <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
       </div>
 
       <div>
         <label for="floor_number" class="block text-sm font-medium mb-1">Número de Piso</label>
-        <InputNumber 
-          id="floor_number"
-          v-model="form.floor_number" 
-          class="w-full"
-          :class="{ 'p-invalid': errors.floor_number }"
-          :min="0"
-          placeholder="0, 1, 2, 3..."
-        />
+        <InputNumber id="floor_number" v-model="form.floor_number" class="w-full"
+          :class="{ 'p-invalid': errors.floor_number }" :min="0" placeholder="0, 1, 2, 3..." />
         <small v-if="errors.floor_number" class="p-error">{{ errors.floor_number }}</small>
         <small class="text-gray-500">0 = Planta Baja, 1 = Primer Piso, etc.</small>
       </div>
 
       <div>
         <label for="description" class="block text-sm font-medium mb-1">Descripción (Opcional)</label>
-        <Textarea 
-          id="description"
-          v-model="form.description" 
-          rows="3" 
-          class="w-full"
-          placeholder="Descripción adicional del piso"
-        />
+        <Textarea id="description" v-model="form.description" rows="3" class="w-full"
+          placeholder="Descripción adicional del piso" />
       </div>
 
       <div class="flex items-center">
-        <Checkbox 
-          id="is_active" 
-          v-model="form.is_active" 
-          binary 
-        />
+        <Checkbox id="is_active" v-model="form.is_active" binary />
         <label for="is_active" class="ml-2">Activo</label>
       </div>
 
       <div class="flex justify-end gap-2 pt-4">
-        <Button 
-          label="Cancelar" 
-          severity="secondary" 
-          @click="closeDialog" 
-        />
-        <Button 
-          label="Guardar" 
-          type="submit" 
-          :loading="loading"
-        />
+        <Button label="Cancelar" severity="secondary" text @click="closeDialog" />
+        <Button label="Guardar" severity="contrast" type="submit" :loading="loading" />
       </div>
     </form>
   </Dialog>
@@ -83,7 +50,7 @@
 <script setup>
 import { ref, reactive } from 'vue';
 import axios from 'axios';
-import { router } from '@inertiajs/vue3'; // Importar router
+import { router } from '@inertiajs/vue3';
 import Button from 'primevue/button';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
@@ -138,7 +105,13 @@ async function submitForm() {
       is_active: form.is_active
     };
 
-    await axios.post('/floors', payload);
+    // Usando Axios con configuración completa
+    const response = await axios.post('/floors', payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
 
     toast.add({
       severity: 'success',
@@ -147,19 +120,56 @@ async function submitForm() {
       life: 3000
     });
 
-    emit('agregado');
+    emit('agregado', response.data);
     closeDialog();
 
   } catch (error) {
     console.error('Error creando piso:', error);
-    
+
+    // Manejo de errores de validación (422)
     if (error.response?.status === 422) {
       errors.value = error.response.data.errors;
-    } else {
+      toast.add({
+        severity: 'warn',
+        summary: 'Validación',
+        detail: 'Por favor corrija los errores del formulario',
+        life: 3000
+      });
+    }
+    // Manejo de error de autenticación (401)
+    else if (error.response?.status === 401) {
+      toast.add({
+        severity: 'error',
+        summary: 'No Autorizado',
+        detail: 'Su sesión ha expirado',
+        life: 3000
+      });
+      router.visit('/login');
+    }
+    // Manejo de error de servidor (500)
+    else if (error.response?.status === 500) {
+      toast.add({
+        severity: 'error',
+        summary: 'Error del Servidor',
+        detail: 'Ocurrió un error en el servidor',
+        life: 3000
+      });
+    }
+    // Manejo de error de red
+    else if (error.message === 'Network Error') {
+      toast.add({
+        severity: 'error',
+        summary: 'Error de Conexión',
+        detail: 'No se pudo conectar con el servidor',
+        life: 3000
+      });
+    }
+    // Otros errores
+    else {
       toast.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No se pudo crear el piso',
+        detail: error.response?.data?.message || 'No se pudo crear el piso',
         life: 3000
       });
     }
@@ -169,7 +179,6 @@ async function submitForm() {
 }
 
 const goBack = () => {
-  // Corregir la sintaxis de la plantilla literal
   router.visit(`/panel/branches/${props.subBranch.branch.id}/sub-branches`);
 };
 </script>

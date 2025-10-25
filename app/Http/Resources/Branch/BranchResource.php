@@ -10,6 +10,7 @@ class BranchResource extends JsonResource{
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'is_active' => $this->is_active,
             'creacion' => Carbon::parse($this->created_at)
                 ->locale('es')
                 ->translatedFormat('l d \d\e F \d\e Y h:i:s A'),
