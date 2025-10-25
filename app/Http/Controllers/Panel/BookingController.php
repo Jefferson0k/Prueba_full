@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Panel;
 use App\Filters\FilterByDateRange;
 use App\Filters\FilterByPaymentMethod;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Booking\StoreBookingRequest;
 use App\Http\Resources\PaymentList\PaymentListResource;
 use App\Http\Resources\PaymentMethodTotal\PaymentMethodTotalResource;
 use App\Models\Booking;
@@ -222,31 +223,11 @@ class BookingController extends Controller{
             ], 500);
         }
     }
-    public function store(Request $request){
+    public function store(StoreBookingRequest $request){
         DB::beginTransaction();
 
         try {
-            $validated = $request->validate([
-                'room_id' => 'required|exists:rooms,id',
-                'customers_id' => 'required|exists:customers,id',
-                'rate_type_id' => 'required|exists:rate_types,id',
-                'currency_id' => 'required|exists:currencies,id',
-                'check_in' => 'required|date',
-                'total_hours' => 'required|integer|min:1',
-                'rate_per_hour' => 'required|numeric|min:0',
-                'voucher_type' => 'sometimes|in:ticket,boleta,factura',
-                // Pagos
-                'payments' => 'required|array|min:1',
-                'payments.*.payment_method_id' => 'required|exists:payment_methods,id',
-                'payments.*.amount' => 'required|numeric|min:0',
-                'payments.*.cash_register_id' => 'nullable|exists:cash_registers,id',
-                'payments.*.operation_number' => 'nullable|string',
-                // Productos opcionales
-                'consumptions' => 'sometimes|array',
-                'consumptions.*.product_id' => 'required|exists:products,id',
-                'consumptions.*.quantity' => 'required|integer|min:1',
-                'consumptions.*.unit_price' => 'required|numeric|min:0',
-            ]);
+            $validated = $request->validated();
 
             // Obtener sub_branch del usuario autenticado
             $subBranchId = Auth::user()->sub_branch_id;
@@ -254,7 +235,7 @@ class BookingController extends Controller{
                 throw new Exception('El usuario no tiene una sub_sucursal asignada');
             }
 
-            // Generar código de booking
+            // Generar código del booking
             $bookingCode = $this->generateBookingCode();
 
             // Calcular check_out y subtotales
@@ -311,6 +292,7 @@ class BookingController extends Controller{
                 ]);
             }
 
+            // Procesar pagos
             $totalPaid = 0;
             foreach ($validated['payments'] as $paymentData) {
                 if (isset($paymentData['cash_register_id'])) {
@@ -319,10 +301,12 @@ class BookingController extends Controller{
                         throw new Exception('La caja especificada no está abierta');
                     }
                 }
+
                 $paymentMethod = PaymentMethod::find($paymentData['payment_method_id']);
                 if ($paymentMethod && $paymentMethod->requires_reference && empty($paymentData['operation_number'])) {
                     throw new Exception("El método de pago {$paymentMethod->name} requiere un número de operación");
                 }
+
                 Payment::create([
                     'id' => Str::uuid(),
                     'payment_code' => $this->generatePaymentCode(),
@@ -338,11 +322,16 @@ class BookingController extends Controller{
                     'status' => 'completed',
                     'created_by' => Auth::id(),
                 ]);
+
                 $totalPaid += $paymentData['amount'];
             }
+
+            // Actualizar monto pagado y estado de la habitación
             $booking->update(['paid_amount' => $totalPaid]);
             Room::where('id', $validated['room_id'])->update(['status' => 'occupied']);
+
             DB::commit();
+
             return response()->json([
                 'message' => 'Booking creado exitosamente',
                 'booking' => $booking->load([
@@ -355,12 +344,14 @@ class BookingController extends Controller{
             ], 201);
         } catch (Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'message' => 'Error al crear booking',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
+
     public function show($id)
     {
         $booking = Booking::with([

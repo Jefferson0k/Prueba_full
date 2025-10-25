@@ -563,22 +563,6 @@ const progressPercentage = computed(() => {
     return (remainingSeconds.value / totalSeconds.value) * 100;
 });
 
-const loadRateTypes = async () => {
-    try {
-        const response = await axios.get('/rate-types');
-        rateTypes.value = response.data.data || response.data;
-        console.log('Rate types cargados:', rateTypes.value);
-    } catch (error: any) {
-        console.error('Error al cargar rate types:', error);
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudieron cargar los tipos de tarifa',
-            life: 3000
-        });
-    }
-};
-
 // Métodos del servicio
 const startService = () => {
     if (!selectedClient.value) {
@@ -947,16 +931,3 @@ onUnmounted(() => {
     }
 });
 </script>
-
-<style scoped>
-.p-invalid {
-    border-color: #ef4444;
-}
-
-.p-error {
-    color: #ef4444;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-    display: block;
-}
-</style>
