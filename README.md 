@@ -1,0 +1,284 @@
+# Proyecto Pruebas
+
+Aplicación web desarrollada con PHP/Laravel, PostgreSQL y Node.js, containerizada con Docker.
+
+## 📋 Requisitos Previos
+
+Antes de comenzar, asegúrate de tener instalado:
+
+- **Docker Desktop** (v20.10 o superior)
+  - [Windows](https://docs.docker.com/desktop/install/windows-install/)
+  - [macOS](https://docs.docker.com/desktop/install/mac-install/)
+  - [Linux](https://docs.docker.com/engine/install/)
+- **Docker Compose** (v2.0 o superior) - Incluido en Docker Desktop
+
+### Verificar Instalación
+```bash
+docker --version
+docker-compose --version
+```
+
+## 🚀 Instalación y Configuración
+
+### 1. Clonar el Repositorio
+```bash
+git clone <url-del-repositorio>
+cd pruebas
+```
+
+### 2. Construir y Levantar los Contenedores
+```bash
+# Construir imágenes y levantar servicios
+docker-compose up -d --build
+
+# Ver logs de los contenedores
+docker-compose logs -f
+```
+
+### 3. Instalar Dependencias (Primera vez)
+```bash
+# Instalar dependencias de Composer
+docker-compose run --rm composer install
+
+# Instalar dependencias de Node (se hace automáticamente)
+# Pero si necesitas reinstalar:
+docker-compose exec node npm install
+```
+
+### 4. Configurar Variables de Entorno
+```bash
+# Copiar archivo de ejemplo
+cp .env.example .env
+
+# Generar key de Laravel
+docker-compose exec app php artisan key:generate
+```
+
+### 5. Ejecutar Migraciones
+```bash
+# Ejecutar migraciones de base de datos
+docker-compose exec app php artisan migrate
+
+# Con seeders (opcional)
+docker-compose exec app php artisan migrate --seed
+```
+
+## 🌐 URLs Base
+
+Una vez levantado el entorno, accede a:
+
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| **Aplicación** | http://localhost | Frontend de la aplicación |
+| **Adminer** | http://localhost:8080 | Gestor de base de datos |
+| **Vite Dev** | http://localhost:5173 | Servidor de desarrollo frontend |
+| **PostgreSQL** | localhost:5432 | Base de datos (acceso directo) |
+
+### Credenciales de Base de Datos
+
+- **Sistema**: PostgreSQL
+- **Servidor**: `postgres` (dentro de Docker) / `localhost` (desde host)
+- **Puerto**: `5432`
+- **Usuario**: `pruebas_user`
+- **Contraseña**: `password`
+- **Base de datos**: `pruebas`
+
+## 📁 Estructura del Proyecto
+```
+pruebas/
+├── docker/
+│   ├── nginx/
+│   │   └── default.conf          # Configuración de Nginx
+│   └── php/
+│       └── Dockerfile             # Imagen personalizada de PHP
+├── app/                           # Código de la aplicación
+├── public/                        # Archivos públicos
+├── resources/                     # Vistas y assets
+├── docker-compose.yml             # Configuración de servicios
+├── .env                           # Variables de entorno
+└── README.md                      # Este archivo
+```
+
+## 🐳 Comandos Docker
+
+### Gestión de Contenedores
+```bash
+# Levantar todos los servicios
+docker-compose up -d
+
+# Detener todos los servicios
+docker-compose down
+
+# Detener y eliminar volúmenes (⚠️ elimina datos de BD)
+docker-compose down -v
+
+# Ver estado de los contenedores
+docker-compose ps
+
+# Ver logs de todos los servicios
+docker-compose logs -f
+
+# Ver logs de un servicio específico
+docker-compose logs -f app
+```
+
+### Ejecutar Comandos en Contenedores
+```bash
+# Artisan (Laravel)
+docker-compose exec app php artisan [comando]
+
+# Composer
+docker-compose run --rm composer [comando]
+
+# NPM
+docker-compose exec node npm [comando]
+
+# Acceder a la terminal del contenedor
+docker-compose exec app bash
+docker-compose exec postgres psql -U pruebas_user -d pruebas
+```
+
+### Comandos Útiles de Laravel
+```bash
+# Limpiar caché
+docker-compose exec app php artisan cache:clear
+docker-compose exec app php artisan config:clear
+docker-compose exec app php artisan route:clear
+docker-compose exec app php artisan view:clear
+
+# Crear migración
+docker-compose exec app php artisan make:migration create_tabla_name
+
+# Crear modelo
+docker-compose exec app php artisan make:model NombreModelo -m
+
+# Crear controlador
+docker-compose exec app php artisan make:controller NombreController
+```
+
+## 🔧 Manejo de Errores Comunes
+
+### Error: Puerto ya en uso
+
+**Problema**: `Error: bind: address already in use`
+
+**Solución**: Cambia el puerto en `docker-compose.yml`
+```yaml
+ports:
+  - "8000:80"  # Cambiar 80 por 8000 u otro puerto disponible
+```
+
+### Error: Permisos denegados (Linux)
+
+**Problema**: Errores de permisos al escribir archivos
+
+**Solución**:
+```bash
+sudo chown -R $USER:$USER .
+chmod -R 755 storage bootstrap/cache
+```
+
+### Error: Contenedor se detiene inmediatamente
+
+**Problema**: El contenedor no permanece activo
+
+**Solución**: Ver logs para identificar el error
+```bash
+docker-compose logs app
+```
+
+### Error: Base de datos no conecta
+
+**Problema**: `SQLSTATE[HY000] [2002] Connection refused`
+
+**Solución**:
+1. Verificar que el contenedor de postgres esté corriendo:
+```bash
+   docker-compose ps
+```
+2. Asegurar que el `.env` tenga las credenciales correctas:
+```
+   DB_CONNECTION=pgsql
+   DB_HOST=postgres
+   DB_PORT=5432
+   DB_DATABASE=pruebas
+   DB_USERNAME=pruebas_user
+   DB_PASSWORD=password
+```
+
+### Error: Node modules no encontrados
+
+**Problema**: Errores relacionados con dependencias de Node
+
+**Solución**:
+```bash
+docker-compose exec node npm install
+docker-compose restart node
+```
+
+### Limpiar y Reconstruir Todo
+
+Si nada funciona, prueba limpiar completamente:
+```bash
+# Detener y eliminar todo
+docker-compose down -v
+
+# Eliminar imágenes
+docker-compose rm -f
+
+# Reconstruir desde cero
+docker-compose build --no-cache
+docker-compose up -d
+
+# Reinstalar dependencias
+docker-compose run --rm composer install
+```
+
+## 🔄 Actualizar el Proyecto
+```bash
+# Obtener cambios del repositorio
+git pull origin main
+
+# Reconstruir contenedores si hay cambios en Dockerfiles
+docker-compose up -d --build
+
+# Actualizar dependencias
+docker-compose run --rm composer update
+docker-compose exec node npm update
+
+# Ejecutar nuevas migraciones
+docker-compose exec app php artisan migrate
+```
+
+## 🛠️ Desarrollo
+
+### Hot Reload (Vite)
+
+El servidor de Vite está configurado para hot reload automático. Los cambios en archivos frontend se reflejarán inmediatamente.
+
+### Xdebug (Opcional)
+
+Si necesitas debuggear PHP, configura Xdebug en `docker/php/Dockerfile` y reinicia el contenedor.
+
+## 📝 Notas
+
+- **No necesitas** instalar PHP, Node.js, PostgreSQL ni Nginx localmente
+- Todos los servicios corren en contenedores Docker aislados
+- Los datos de PostgreSQL persisten en el volumen `postgres_data`
+- El código fuente se monta como volumen para desarrollo en tiempo real
+
+## 🆘 Soporte
+
+Si encuentras problemas no documentados aquí:
+
+1. Revisa los logs: `docker-compose logs -f`
+2. Verifica el estado: `docker-compose ps`
+3. Consulta la documentación de Docker: https://docs.docker.com
+
+## 📄 Licencia
+
+[Especifica tu licencia aquí]
+
+---
+
+**Desarrollado con ❤️ usando Docker**
