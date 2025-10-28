@@ -115,5 +115,14 @@ class UsuariosController extends Controller{
             'message' => 'Usuario eliminado correctamente'
         ]);
     }
-
+    public function search(Request $request){
+        $request->validate([
+            'sub_branch_id' => 'required|uuid|exists:sub_branches,id'
+        ]);
+        $subBranchId = $request->input('sub_branch_id');
+        $users = User::where('sub_branch_id', $subBranchId)
+            ->orderBy('name', 'asc')
+            ->get();
+        return UserResource::collection($users);
+    }
 }

@@ -443,26 +443,35 @@ const saveProduct = async () => {
   guardando.value = true;
 
   try {
-    // Calcular boxes y units_per_box según el tipo seleccionado
+    // ✅ ENVIAR DATOS CORRECTOS
     let boxes = 0;
-    let unitsPerBox = productoCompleto.value.fraction_units;
+    let fractions = 0;
+    
+    // Convertir valores al inglés que espera el backend
+    const quantityTypeMap = {
+      'paquete': 'packages',
+      'fraccion': 'fractions', 
+      'ambas': 'both'
+    };
+    
+    let quantityType = quantityTypeMap[tipoSeleccionado.value] || tipoSeleccionado.value;
 
     if (tipoSeleccionado.value === 'paquete') {
+      // Solo paquetes
       boxes = cantidadPaquetes.value;
+      fractions = 0;
     } else if (tipoSeleccionado.value === 'fraccion') {
-      // Convertir fracciones a boxes
-      boxes = Math.floor(cantidadFracciones.value / productoCompleto.value.fraction_units);
-      // Si hay fracciones sobrantes, agregar una caja parcial
-      if (cantidadFracciones.value % productoCompleto.value.fraction_units > 0) {
-        boxes += 1;
-      }
+      // Solo fracciones
+      boxes = 0;
+      fractions = cantidadFracciones.value;
     } else if (tipoSeleccionado.value === 'ambas') {
-      const totalFraccionesAbsolutas = (cantidadPaquetes.value || 0) * productoCompleto.value.fraction_units + (cantidadFracciones.value || 0);
-      boxes = Math.floor(totalFraccionesAbsolutas / productoCompleto.value.fraction_units);
-      if (totalFraccionesAbsolutas % productoCompleto.value.fraction_units > 0) {
-        boxes += 1;
-      }
+      // Ambas
+      boxes = cantidadPaquetes.value || 0;
+      fractions = cantidadFracciones.value || 0;
     }
+
+    // ✅ units_per_box SIEMPRE es la fraccionabilidad del producto (NO CAMBIA)
+    const unitsPerBox = productoCompleto.value.fraction_units;
 
     // Preparar datos para enviar al backend
     const payload = {
@@ -470,10 +479,13 @@ const saveProduct = async () => {
       product_id: productoCompleto.value.id,
       unit_price: precioUnitario.value,
       boxes: boxes,
-      units_per_box: unitsPerBox,
+      units_per_box: unitsPerBox, // ✅ Siempre la fraccionabilidad (ej: 10)
+      fractions: fractions,
+      quantity_type: quantityType,
       expiry_date: fechaVencimiento.value 
         ? new Date(fechaVencimiento.value).toISOString().split('T')[0] 
-        : null
+        : null,
+      total_price: precioTotal.value // ✅ Precio directo (NO calcular)
     };
 
     console.log('Enviando al backend:', payload);
@@ -503,7 +515,6 @@ const saveProduct = async () => {
     if (error.response?.data?.message) {
       errorMessage = error.response.data.message;
     } else if (error.response?.data?.errors) {
-      // Mostrar errores de validación
       const errors = Object.values(error.response.data.errors).flat();
       errorMessage = errors.join(', ');
     }

@@ -181,7 +181,7 @@
             <Avatar icon="pi pi-box" shape="circle" size="large" 
               :style="{ backgroundColor: getColorByCategory(data.category_name), color: '#fff' }" />
             <div>
-              <div class="font-bold text-gray-800">{{ data.product_name }}</div>
+              <div class="font-bold">{{ data.product_name }}</div>
             </div>
           </div>
         </template>
@@ -247,8 +247,8 @@
       <Column field="purchase_price" header="P. Compra" sortable style="min-width: 10rem">
         <template #body="{ data }">
           <div class="flex items-center gap-1">
-            <span class="text-xs text-gray-500">S/</span>
-            <span class="font-semibold text-gray-700">{{ parseFloat(data.purchase_price).toFixed(2) }}</span>
+            <span class="text-xs">S/</span>
+            <span class="font-semibold">{{ parseFloat(data.purchase_price).toFixed(2) }}</span>
           </div>
         </template>
       </Column>
@@ -256,8 +256,8 @@
       <Column field="sale_price" header="P. Venta" sortable style="min-width: 10rem">
         <template #body="{ data }">
           <div class="flex items-center gap-1">
-            <span class="text-xs text-gray-500">S/</span>
-            <span class="font-semibold text-green-700">{{ parseFloat(data.sale_price).toFixed(2) }}</span>
+            <span class="text-xs">S/</span>
+            <span class="font-semibold">{{ parseFloat(data.sale_price).toFixed(2) }}</span>
           </div>
         </template>
       </Column>
@@ -268,7 +268,7 @@
             <span class="text-sm font-bold" :class="getMargenClass(data.purchase_price, data.sale_price)">
               {{ calcularMargen(data.purchase_price, data.sale_price) }}%
             </span>
-            <span class="text-xs text-gray-500">
+            <span class="text-xs">
               S/ {{ calcularGanancia(data.purchase_price, data.sale_price) }}
             </span>
           </div>

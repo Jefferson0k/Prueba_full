@@ -1,12 +1,12 @@
 <template>
   <div class="mb-4">
     <div class="flex justify-between items-center mb-4">
-      <h2 class="text-2xl font-bold text-gray-800">Gestión de Cajas Registradoras</h2>
+      <h2 class="text-2xl font-bold">Gestión de Cajas Registradoras</h2>
       <Button 
         label="Crear Múltiples Cajas" 
         icon="pi pi-plus" 
         @click="showDialog = true"
-        severity="success"
+        severity="contrast"
       />
     </div>
 
@@ -19,7 +19,7 @@
     >
       <div class="flex flex-col gap-4">
         <div>
-          <label for="quantity" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="quantity" class="block text-sm font-medium mb-2">
             Cantidad de Cajas
           </label>
           <InputNumber
@@ -34,8 +34,8 @@
           <small v-if="errors.quantity" class="text-red-500">{{ errors.quantity }}</small>
         </div>
 
-        <div class="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
-          <p class="text-sm text-blue-700">
+        <div class="border-l-4 p-3 rounded">
+          <p class="text-sm">
             <i class="pi pi-info-circle mr-2"></i>
             Se crearán <strong>{{ quantity }}</strong> cajas registradoras con estado "cerrada"
           </p>
@@ -55,7 +55,7 @@
           icon="pi pi-check" 
           @click="createMultipleCashes" 
           :loading="isCreating"
-          severity="success"
+          severity="contrast"
         />
       </template>
     </Dialog>

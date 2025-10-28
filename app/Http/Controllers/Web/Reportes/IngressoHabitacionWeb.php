@@ -9,7 +9,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 class IngressoHabitacionWeb extends Controller{
     public function view(): Response{
-        //Gate::authorize('viewAny', Product::class);
+        Gate::authorize('viewAny', Product::class);
         return Inertia::render('panel/Reportes/IngresoHabitacion/indexIngresoHabitacion');
     }
 }

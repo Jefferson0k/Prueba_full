@@ -26,17 +26,16 @@ export interface PagoPersonal {
   actualizado_en: string;
 }
 
-// Estado global compartido
 const pagos = ref<PagoPersonal[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
 export function usePagosPersonal() {
-  const fetchPagos = async () => {
+  const fetchPagos = async (params: Record<string, any> = {}) => {
     loading.value = true;
     error.value = null;
     try {
-      const response = await axios.get('/pagos');
+      const response = await axios.get('/pagos', { params });
       pagos.value = response.data.data || [];
       return pagos.value;
     } catch (err: any) {
@@ -66,6 +65,24 @@ export function usePagosPersonal() {
     }
   };
 
+  const updatePago = async (id: number, formData: FormData) => {
+    loading.value = true;
+    error.value = null;
+    try {
+      const response = await axios.post(`/pagos/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      await fetchPagos();
+      return response.data;
+    } catch (err: any) {
+      error.value = err.message || 'Error al actualizar el pago';
+      console.error('Error updatePago:', err);
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
   const deletePago = async (id: number) => {
     loading.value = true;
     error.value = null;
@@ -87,6 +104,7 @@ export function usePagosPersonal() {
     error,
     fetchPagos,
     createPago,
+    updatePago,
     deletePago
   };
 }

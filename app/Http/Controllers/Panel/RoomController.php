@@ -221,4 +221,24 @@ class RoomController extends Controller{
             });
         }
     }
+    public function liberar($id){
+        try {
+            $room = Room::findOrFail($id);
+            if ($room->status !== 'cleaning') {
+                return response()->json([
+                    'message' => 'La habitación no está en estado de limpieza'
+                ], 400);
+            }
+            $room->status = 'available';
+            $room->save();
+            return response()->json([
+                'message' => 'Habitación liberada correctamente',
+                'data' => $room
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al liberar la habitación'
+            ], 500);
+        }
+    }
 }

@@ -10,8 +10,14 @@ class PorSucursal
     public function handle($query, Closure $next)
     {
         $user = Auth::user();
+        $sucursalFiltro = request('sub_branch_id');
 
-        if ($user && $user->sub_branch_id) {
+        // Si se envía un sub_branch_id específico, usar ese
+        if ($sucursalFiltro) {
+            $query->where('sub_branch_id', $sucursalFiltro);
+        }
+        // Si no, usar la del usuario autenticado
+        elseif ($user && $user->sub_branch_id) {
             $query->where('sub_branch_id', $user->sub_branch_id);
         }
 

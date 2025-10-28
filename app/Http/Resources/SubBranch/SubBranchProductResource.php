@@ -17,6 +17,8 @@ class SubBranchProductResource extends JsonResource
             'min_stock' => $this->min_stock,
             'max_stock' => $this->max_stock,
             'is_active' => $this->is_active,
+            'packages_in_stock' => $this->packages_in_stock,
+            'units_per_package' => $this->units_per_package,
             'is_low_stock' => $this->current_stock <= $this->min_stock,
             'is_out_of_stock' => $this->current_stock == 0,
             'purchase_price' => $this->product->purchase_price ?? null,

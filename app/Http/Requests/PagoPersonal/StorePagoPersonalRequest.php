@@ -1,14 +1,12 @@
 <?php
 namespace App\Http\Requests\PagoPersonal;
 
+use App\Models\PagoPersonal;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 
-class StorePagoPersonalRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return Auth::check();
+class StorePagoPersonalRequest extends FormRequest{
+    public function authorize(): bool{
+        return $this->user()->can('create', PagoPersonal::class);
     }
 
     public function rules(): array

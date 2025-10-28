@@ -1,4 +1,3 @@
-
 <template>
   <Head title="Pago Personal" />
   <AppLayout>
@@ -8,8 +7,15 @@
       </template>
       <template v-else>
         <div class="card">
-          <AddPagoPersonal @refresh="handleRefresh" />
-          <ListPagoPersona ref="listComponent" />
+          <AddPagoPersonal 
+            :sucursalSeleccionada="sucursalSeleccionada"
+            @refresh="handleRefresh" 
+          />
+          <ListPagoPersona 
+            ref="listComponent"
+            v-model:sucursalSeleccionada="sucursalSeleccionada"
+            :userSubBranchId="userSubBranchId"
+          />
         </div>
       </template>
     </div>
@@ -21,15 +27,20 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import AppLayout from '@/layout/AppLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import Espera from '@/components/Espera.vue';
 import AddPagoPersonal from './Desarrollo/addPagoPersonal.vue';
 import ListPagoPersona from './Desarrollo/listPagoPersona.vue';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Toast from 'primevue/toast';
 
+const page = usePage();
 const isLoading = ref(true);
 const listComponent = ref();
+
+// Obtener la sucursal del usuario autenticado desde Inertia
+const userSubBranchId = page.props.auth?.user?.sub_branch_id || null;
+const sucursalSeleccionada = ref<string | null>(userSubBranchId);
 
 onMounted(() => {
   setTimeout(() => {

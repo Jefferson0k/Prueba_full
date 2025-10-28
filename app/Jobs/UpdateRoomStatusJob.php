@@ -10,46 +10,31 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class UpdateRoomStatusJob implements ShouldQueue
-{
+class UpdateRoomStatusJob implements ShouldQueue{
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    protected $room;
-    protected $oldStatus;
-    protected $newStatus;
-    protected $reason;
-    protected $userId;
-
-    public function __construct(Room $room, $oldStatus, $newStatus, $reason = null, $userId = null)
-    {
-        $this->room = $room;
-        $this->oldStatus = $oldStatus;
-        $this->newStatus = $newStatus;
-        $this->reason = $reason;
-        $this->userId = $userId;
-    }
-
-    public function handle()
-    {
-        // Crear log de cambio de estado
+    public function __construct(
+        public Room $room,
+        public string $oldStatus,
+        public string $newStatus,
+        public ?string $reason = null,
+        public ?string $userId = null,
+        public ?string $bookingId = null
+    ) {}
+    public function handle(): void{
+        // Registrar el cambio de estado en el log
         RoomStatusLog::create([
             'room_id' => $this->room->id,
+            'booking_id' => $this->bookingId,
             'previous_status' => $this->oldStatus,
             'new_status' => $this->newStatus,
             'reason' => $this->reason,
             'changed_at' => now(),
-            'changed_by' => $this->userId ?? auth()->id(),
+            'changed_by' => $this->userId,
         ]);
 
-        // Notificar a otros sistemas si es necesario
-        if ($this->newStatus === Room::STATUS_MAINTENANCE) {
-            // Notificar al departamento de mantenimiento
-            // Puedes agregar lógica de notificación aquí
-        }
-
-        if ($this->newStatus === Room::STATUS_CLEANING) {
-            // Notificar al departamento de limpieza
-            // Puedes agregar lógica de notificación aquí
-        }
+        // Aquí puedes agregar lógica adicional:
+        // - Notificaciones al personal de limpieza
+        // - Alertas si una habitación está en mantenimiento mucho tiempo
+        // - Estadísticas de uso, etc.
     }
 }

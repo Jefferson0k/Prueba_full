@@ -27,6 +27,7 @@ use App\Http\Controllers\Panel\ProviderController;
 use App\Http\Controllers\Panel\RateTypeController;
 use App\Http\Controllers\Panel\ReportController;
 use App\Http\Controllers\Panel\RoomController;
+use App\Http\Controllers\Panel\RoomStatusController;
 use App\Http\Controllers\Panel\RoomTypeController;
 use App\Http\Controllers\Panel\SubBranchController;
 use App\Http\Controllers\Panel\SystemSettingController;
@@ -178,25 +179,53 @@ Route::middleware(['auth', 'verified','cash.register.open'])->group(function () 
 
     });
 
-    Route::prefix('pagos')->group(function () {
-        Route::get('/', [PagoPersonalController::class, 'index']);
-        Route::post('/', [PagoPersonalController::class, 'store']);
+    Route::prefix('cuarto')->group(function () {
+        Route::get('/{roomId}/detalles-checkout', [BookingController::class, 'getCheckoutDetails']);
+        Route::get('/{roomId}/calcular-tiempo-extra', [BookingController::class, 'calculateExtraTime']);
+        Route::post('/{roomId}/cobrar-tiempo-extra', [BookingController::class, 'chargeExtraTime']);
+        Route::post('/{roomId}/extender-tiempo', [BookingController::class, 'extendTimeDialog']);
+        Route::post('/{roomId}/checkout', [BookingController::class, 'checkout']);
+        Route::post('/{id}/liberar', [RoomController::class, 'liberar']);
+    });
+    // Gestión de uso de habitaciones
+    Route::post('/bookings/{booking}/start', [RoomStatusController::class, 'startRoom']);
+    Route::post('/bookings/{booking}/extend', [RoomStatusController::class, 'extendTime']);
+    Route::post('/bookings/{booking}/finish', [RoomStatusController::class, 'finishRoom']);
+    
+    // Gestión manual de estados
+    Route::post('/rooms/{room}/change-status', [RoomStatusController::class, 'changeRoomStatus']);
+    Route::post('/rooms/{room}/mark-ready', [RoomStatusController::class, 'markAsReady']);
+    
+    // Historial
+    Route::get('/rooms/{room}/status-history', [RoomStatusController::class, 'statusHistory']);
+
+    Route::prefix('pagos')->name('pagos.')->group(function () {
+        Route::get('/', [PagoPersonalController::class, 'index'])->name('index');
+        Route::post('/', [PagoPersonalController::class, 'store'])->name('store');
+        Route::get('/{pagoPersonal}', [PagoPersonalController::class, 'show'])->name('show');
+        Route::put('/{pagoPersonal}', [PagoPersonalController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PagoPersonalController::class, 'destroy'])->name('destroy');
+        
+        Route::get('/historial/reporte', [PagoPersonalController::class, 'historial'])->name('historial');
+        Route::patch('/{pagoPersonal}/aprobar', [PagoPersonalController::class, 'approve'])->name('approve');
+        Route::patch('/{pagoPersonal}/anular', [PagoPersonalController::class, 'cancel'])->name('cancel');
+        Route::get('/exportar/reporte', [PagoPersonalController::class, 'export'])->name('export');
     });
 
     Route::get('rate-types', [RateTypeController::class, 'index']);
     
     Route::get('currencies', [CurrencyController::class, 'index']);
 
-    Route::apiResource('bookings', BookingController::class);
-    Route::prefix('bookings/{id}')->group(function () {
-        Route::post('/payments', [BookingController::class, 'addPayment']);
-        Route::post('/consumptions', [BookingController::class, 'addConsumption']);
-        Route::post('/finish', [BookingController::class, 'finishBooking']);
-        Route::post('/cancel', [BookingController::class, 'cancelBooking']);
-        Route::get('/payments', [BookingController::class, 'getBookingPayments']);
-        Route::get('/consumptions', [BookingController::class, 'getBookingConsumptions']);
+    Route::prefix('bookings')->group(function () {
+        Route::post('/', [BookingController::class, 'store']);
+        Route::post('/{booking}/add-consumption', [BookingController::class, 'addConsumption']);
+        Route::post('/{booking}/extend-time', [BookingController::class, 'extendTime']);
+        Route::post('/{booking}/finish', [BookingController::class, 'finishService']);
+        Route::post('/rooms/{room}/change-status', [RoomStatusController::class, 'changeRoomStatus']);
+        Route::post('/rooms/{room}/mark-ready', [RoomStatusController::class, 'markAsReady']);
+        Route::get('/rooms/{room}/status-history', [RoomStatusController::class, 'statusHistory']);
     });
-    
+        Route::get('/rooms/dashboard', [RoomStatusController::class, 'dashboard']);
     Route::prefix('payments')->group(function () {
         Route::get('/user-cash-register', [PaymentController::class, 'getUserCashRegister']);
         Route::get('/methods', [PaymentController::class, 'getPaymentMethods']);
@@ -271,7 +300,7 @@ Route::middleware(['auth', 'verified','cash.register.open'])->group(function () 
     Route::get('sub-branches/{sub_branch}/floors', [FloorController::class, 'bySubBranch'])
         ->name('sub-branches.floors');
 
-        #BRANCHES => BACKEND
+    #BRANCHES => BACKEND
     Route::prefix('branches')->group(function () {
         Route::get('/', [BranchController::class, 'index'])->name('branches.index');
         Route::post('/', [BranchController::class, 'store'])->name('branches.store');
@@ -282,18 +311,19 @@ Route::middleware(['auth', 'verified','cash.register.open'])->group(function () 
 
     # SUB BRANCH => BACKEND
     Route::prefix('sub-branches')->group(function () {
-        Route::get('/{id}', [SubBranchController::class, 'index']);
         Route::get('/search', [SubBranchController::class, 'search'])->name('subbranches.search');
         Route::get('/branch/{branchId}', [SubBranchController::class, 'index'])->name('subbranches.by-branch');
         Route::get('/show/{id}', [SubBranchController::class, 'show'])->name('subbranches.show');
+        
+        Route::get('/{id}', [SubBranchController::class, 'index']);
+        
         Route::post('/', [SubBranchController::class, 'store'])->name('subbranches.store');
         Route::put('/{sub_branch}', [SubBranchController::class, 'update'])->name('subbranches.update');
         Route::delete('/{id}', [SubBranchController::class, 'destroy'])->name('subbranches.delete');
     });
 
     Route::prefix('rooms')->controller(RoomController::class)->group(function () {
-        Route::apiResource('/', RoomController::class)
-            ->parameters(['' => 'room']);
+        Route::apiResource('/', RoomController::class)->parameters(['' => 'room']);
         Route::patch('{room}/status', 'changeStatus')->name('rooms.change-status');
         Route::get('{room}/status-logs', 'statusLogs')->name('rooms.status-logs');
         Route::get('stats/general', 'stats')->name('rooms.stats');
@@ -301,7 +331,6 @@ Route::middleware(['auth', 'verified','cash.register.open'])->group(function () 
         Route::get('search/advanced', 'advancedSearch')->name('rooms.advanced-search');
         Route::get('with-stats/index', 'indexWithStats')->name('rooms.index-with-stats');
     });
-
 
     Route::prefix('system-settings')->group(function () {
         Route::get('/', [SystemSettingController::class, 'index'])
@@ -392,6 +421,7 @@ Route::middleware(['auth', 'verified','cash.register.open'])->group(function () 
         Route::get('/{user}',[UsuariosController::class, 'show'])->name('usuarios.show');
         Route::put('/{user}',[UsuariosController::class, 'update'])->name('usuarios.update');
         Route::delete('/{user}',[UsuariosController::class, 'destroy'])->name('usuarios.destroy');
+        Route::get('/search/by-subranch', [UsuariosController::class, 'search'])->name('usuarios.search');
     });
     
     #ROLES => BACKEND

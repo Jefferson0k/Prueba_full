@@ -5,17 +5,14 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
-class UpdateRoomTypeRequest extends FormRequest
-{
+class UpdateRoomTypeRequest extends FormRequest{
     public function authorize(): bool
     {
-        return Auth::check();
-    }
-
-    public function rules(): array
-    {
         $roomType = $this->route('roomType');
-
+        return $roomType && $this->user()->can('update', $roomType);
+    }
+    public function rules(): array{
+        $roomType = $this->route('roomType');
         return [
             'name' => [
                 'required',
@@ -31,9 +28,7 @@ class UpdateRoomTypeRequest extends FormRequest
             'is_active' => 'sometimes|boolean',
         ];
     }
-
-    public function messages(): array
-    {
+    public function messages(): array{
         return [
             'name.required' => 'El nombre del tipo de habitación es obligatorio.',
             'name.unique' => 'Ya existe un tipo de habitación con este nombre.',

@@ -12,6 +12,7 @@ class KardexResource extends JsonResource{
             'product_id'          => $this->product_id,
             'product_nombre'      => $this->product->name,
             'movement_detail_id'  => $this->movement_detail_id,
+            'movementDetail'      => $this->movementDetail ? $this->movementDetail->movement->code : null,
             'sale_id'             => $this->sale_id,
             'precio_total'        => $this->precio_total,
             'SAnteriorCaja'       => $this->SAnteriorCaja,

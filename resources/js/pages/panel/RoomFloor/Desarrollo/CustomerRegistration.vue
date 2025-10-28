@@ -84,10 +84,11 @@
             </div>
 
             <template #footer>
-                <Button label="Cancelar" severity="secondary" @click="closeDialog" :disabled="loading" />
+                <Button label="Cancelar" severity="secondary" text @click="closeDialog" :disabled="loading" />
                 <Button 
                     label="Guardar Cliente" 
                     icon="pi pi-check" 
+                    severity="contrast"
                     @click="saveClient"
                     :loading="loading"
                 />

@@ -2,26 +2,26 @@
 
 namespace App\Policies;
 
-use App\Models\CashRegister;
+use App\Models\RoomType;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class CashRegisterPolicy
+class RoomTypePolicy
 {
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view caja');
+        return $user->can('view habitacion');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, CashRegister $cashRegister): bool
+    public function view(User $user, RoomType $roomType): bool
     {
-        return $user->can('view caja');
+        return $user->can('view habitacion');
     }
 
     /**
@@ -29,33 +29,29 @@ class CashRegisterPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('crear caja');
+        return $user->can('create habitacion');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, CashRegister $cashRegister): bool
+    public function update(User $user, RoomType $roomType): bool
     {
-        return $user->can('editar caja');
+        return $user->can('update habitacion');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, CashRegister $cashRegister): bool
+    public function delete(User $user, RoomType $roomType): bool
     {
-        return $user->can('eliminar caja');
+        return $user->can('delete habitacion');
     }
-    
-    public function open(User $user, CashRegister $cashRegister): bool{
-        return $user->can('abrir caja') && 
-               $user->sub_branch_id === $cashRegister->sub_branch_id;
-    }
+
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, CashRegister $cashRegister): bool
+    public function restore(User $user, RoomType $roomType): bool
     {
         return false;
     }
@@ -63,7 +59,7 @@ class CashRegisterPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, CashRegister $cashRegister): bool
+    public function forceDelete(User $user, RoomType $roomType): bool
     {
         return false;
     }

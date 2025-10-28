@@ -41,9 +41,9 @@
         <Tag :value="data.movement_type" :severity="data.movement_type === 'entrada' ? 'success' : 'danger'" />
       </template>
     </Column>
-    <Column field="movement_detail_id" header="Código Mov." sortable style="min-width: 16rem">
+    <Column field="movementDetail" header="Código Mov." sortable style="min-width: 10rem">
       <template #body="{ data }">
-        <span class="text-xs font-mono">{{ data.movement_detail_id }}</span>
+        <span class="text-xs font-mono">{{ data.movementDetail }}</span>
       </template>
     </Column>
     <Column field="precio_total" header="Precio Total" sortable style="min-width: 10rem">

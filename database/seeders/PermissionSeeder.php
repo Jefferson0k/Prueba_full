@@ -9,13 +9,33 @@ class PermissionSeeder extends Seeder{
     public function run(): void{
 
         #=============================
+        #Pagos Personal
+        #=============================
+        Permission::create(['name' => 'view pagos personal']);
+        Permission::create(['name' => 'create pagos personal']);
+        Permission::create(['name' => 'update pagos personal']);
+        Permission::create(['name' => 'delete pagos personal']);
+        Permission::create(['name' => 'approve pagos personal']);
+        Permission::create(['name' => 'cancel pagos personal']);
+        Permission::create(['name' => 'view reportes pagos personal']);
+        Permission::create(['name' => 'process payroll']);
+
+        #=============================
+        #Habitacion
+        #=============================
+        Permission::create(['name' => 'create habitacion']);
+        Permission::create(['name' => 'update habitacion']);
+        Permission::create(['name' => 'delete habitacion']);
+        Permission::create(['name' => 'view habitacion']);
+
+        #=============================
         #CAJAS
         #=============================
         Permission::create(['name' => 'crear caja']);
         Permission::create(['name' => 'editar caja']);
         Permission::create(['name' => 'eliminar caja']);
         Permission::create(['name' => 'view caja']);
-
+        Permission::create(['name' => 'abrir caja']);
         #=============================
         #MOVEMENT DETAIL
         #=============================

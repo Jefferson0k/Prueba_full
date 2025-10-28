@@ -97,10 +97,11 @@ class Booking extends Model implements AuditableContract{
 
     public function scopeByBranch($query, $branchId)
     {
-        return $query->whereHas('room.floor', function ($q) use ($branchId) {
+        return $query->whereHas('room.floor.subBranch', function ($q) use ($branchId) {
             $q->where('branch_id', $branchId);
         });
     }
+    
     public function calculateTotals()
     {
         $this->subtotal = $this->rate_per_unit * $this->total_hours;
@@ -120,7 +121,7 @@ class Booking extends Model implements AuditableContract{
         ]);
 
         // Actualizar inventario
-        $branch = $this->room->floor->branch;
+        $branch = $this->room->floor->subBranch->branch;
         $inventory = Inventory::where('branch_id', $branch->id)
             ->where('product_id', $product->id)
             ->first();
@@ -160,7 +161,12 @@ class Booking extends Model implements AuditableContract{
         $this->save();
 
         // Cambiar estado de la habitación
-        $this->room->changeStatus(Room::STATUS_OCCUPIED, 'Check-in de reserva: ' . $this->booking_code, $userId);
+        $this->room->changeStatus(
+            Room::STATUS_OCCUPIED, 
+            'Check-in de reserva: ' . $this->booking_code, 
+            $userId,
+            $this->id
+        );
 
         event(new BookingStatusChanged($this, self::STATUS_CONFIRMED, self::STATUS_CHECKED_IN));
     }
@@ -176,7 +182,12 @@ class Booking extends Model implements AuditableContract{
         $this->save();
 
         // Cambiar estado de la habitación a limpieza
-        $this->room->changeStatus(Room::STATUS_CLEANING, 'Check-out de reserva: ' . $this->booking_code, $userId);
+        $this->room->changeStatus(
+            Room::STATUS_CLEANING, 
+            'Check-out de reserva: ' . $this->booking_code, 
+            $userId,
+            $this->id
+        );
 
         // Procesar pagos pendientes si hay consumos
         ProcessBookingPaymentJob::dispatch($this);
@@ -193,16 +204,21 @@ class Booking extends Model implements AuditableContract{
 
         // Si estaba ocupada, liberar la habitación
         if ($oldStatus === self::STATUS_CHECKED_IN) {
-            $this->room->changeStatus(Room::STATUS_AVAILABLE, 'Cancelación de reserva: ' . $this->booking_code, $userId);
+            $this->room->changeStatus(
+                Room::STATUS_AVAILABLE, 
+                'Cancelación de reserva: ' . $this->booking_code, 
+                $userId,
+                $this->id
+            );
         }
 
         event(new BookingStatusChanged($this, $oldStatus, self::STATUS_CANCELLED));
     }
 
+    // En tu modelo Booking.php
     public function getBalanceAttribute()
     {
-        $totalConsumptions = $this->consumptions()->sum('total_price');
-        return ($this->total_amount + $totalConsumptions) - $this->paid_amount;
+        return $this->total_amount - $this->paid_amount;
     }
 
     public function isPaid()

@@ -1,42 +1,45 @@
 <template>
-  <DataTable 
-    ref="dt" 
-    v-model:selection="selectedProducts" 
-    :value="pagosStore.pagos.value" 
-    dataKey="id" 
-    :loading="pagosStore.loading.value"
-    :paginator="true" 
-    :rows="15"
-    :filters="filters"
+  <DataTable ref="dt" v-model:selection="selectedProducts" :value="pagosStore.pagos.value" dataKey="id"
+    :loading="pagosStore.loading.value" :paginator="true" :rows="15" :filters="filters"
     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
     :rowsPerPageOptions="[10, 15, 25, 50]"
-    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pagos" 
-    class="p-datatable-sm"
-  >
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pagos" class="p-datatable-sm">
     <template #header>
       <div class="flex flex-wrap gap-2 items-center justify-between">
         <h4 class="m-0 font-semibold text-xl">Listado de Pagos</h4>
         <div class="flex gap-2">
+          <Select
+            v-model="sucursalSeleccionadaLocal"
+            :options="sucursales"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Todas las sucursales"
+            :loading="loadingSucursales"
+            class="w-64"
+            showClear
+            @update:modelValue="onSucursalChange"
+          >
+            <template #option="slotProps">
+              <div class="flex flex-col">
+                <span class="font-semibold">{{ slotProps.option.name }}</span>
+                <span class="text-sm text-gray-600">{{ slotProps.option.code }}</span>
+              </div>
+            </template>
+          </Select>
           <IconField>
             <InputIcon>
               <i class="pi pi-search" />
             </InputIcon>
             <InputText v-model="filters['global'].value" placeholder="Buscar..." />
           </IconField>
-          <Button 
-            icon="pi pi-refresh" 
-            @click="loadPagos" 
-            outlined 
-            severity="contrast"
-            :loading="pagosStore.loading.value"
-            v-tooltip.top="'Actualizar'"
-          />
+          <Button icon="pi pi-refresh" @click="loadPagos" outlined severity="contrast"
+            :loading="pagosStore.loading.value" v-tooltip.top="'Actualizar'" />
         </div>
       </div>
     </template>
 
     <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
-    
+
     <Column field="empleado" header="Empleado" sortable style="min-width: 200px">
       <template #body="slotProps">
         <div class="flex flex-col">
@@ -53,7 +56,7 @@
 
     <Column field="fecha_pago_formateada" header="Fecha Pago" sortable style="min-width: 120px"></Column>
     <Column field="periodo" header="Periodo" sortable style="min-width: 120px"></Column>
-    
+
     <Column field="tipo_pago" header="Tipo" sortable style="min-width: 120px">
       <template #body="slotProps">
         <Tag :value="slotProps.data.tipo_pago" severity="info" />
@@ -68,34 +71,17 @@
 
     <Column field="estado" header="Estado" sortable style="min-width: 100px">
       <template #body="slotProps">
-        <Tag 
-          :value="slotProps.data.estado" 
-          :severity="getEstadoSeverity(slotProps.data.estado)"
-        />
+        <Tag :value="slotProps.data.estado" :severity="getEstadoSeverity(slotProps.data.estado)" />
       </template>
     </Column>
 
     <Column header="Comprobante" style="min-width: 120px">
       <template #body="slotProps">
         <div v-if="slotProps.data.tiene_comprobante" class="flex gap-2">
-          <Button 
-            icon="pi pi-eye"
-            rounded
-            text
-            severity="info"
-            size="small"
-            @click="verComprobante(slotProps.data)"
-            v-tooltip.top="'Ver comprobante'"
-          />
-          <Button 
-            icon="pi pi-download"
-            rounded
-            text
-            severity="secondary"
-            size="small"
-            @click="descargarComprobante(slotProps.data)"
-            v-tooltip.top="'Descargar'"
-          />
+          <Button icon="pi pi-eye" rounded text severity="info" size="small" @click="verComprobante(slotProps.data)"
+            v-tooltip.top="'Ver comprobante'" />
+          <Button icon="pi pi-download" rounded text severity="secondary" size="small"
+            @click="descargarComprobante(slotProps.data)" v-tooltip.top="'Descargar'" />
         </div>
         <span v-else class="text-gray-400 text-sm">Sin comprobante</span>
       </template>
@@ -104,14 +90,10 @@
     <Column :exportable="false" style="min-width: 120px" header="Acciones">
       <template #body="slotProps">
         <div class="flex gap-2">
-          <Button 
-            icon="pi pi-trash" 
-            outlined 
-            rounded 
-            severity="danger" 
-            size="small"
-            @click="confirmDeleteProduct(slotProps.data)" 
-          />
+          <Button icon="pi pi-pencil" outlined rounded severity="info" size="small" @click="editPago(slotProps.data)"
+            v-tooltip.top="'Editar'" />
+          <Button icon="pi pi-trash" outlined rounded severity="danger" size="small"
+            @click="confirmDeletePago(slotProps.data)" v-tooltip.top="'Eliminar'" />
         </div>
       </template>
     </Column>
@@ -123,44 +105,32 @@
       </div>
     </template>
   </DataTable>
+  <UpdatePagoPersonal v-model:visible="editDialog" :pago="pagoSeleccionado" @updated="onPagoUpdated" />
 
-  <Dialog 
-    v-model:visible="comprobanteDialog" 
-    :style="{ width: '800px' }" 
-    header="Comprobante de Pago" 
-    :modal="true"
-  >
+  <!-- Diálogo de Eliminación -->
+  <DeletePagoPersonal v-model:visible="deleteDialog" :pago="pagoSeleccionado" @deleted="onPagoDeleted" />
+
+  <Dialog v-model:visible="comprobanteDialog" :style="{ width: '800px' }" header="Comprobante de Pago" :modal="true">
     <div v-if="comprobanteSeleccionado">
       <div v-if="comprobanteSeleccionado.tipo_comprobante === 'imagen'" class="text-center">
-        <img 
-          :src="comprobanteSeleccionado.comprobante_url" 
-          alt="Comprobante"
-          class="max-w-full h-auto rounded-lg shadow-lg"
-        />
+        <img :src="comprobanteSeleccionado.comprobante_url" alt="Comprobante"
+          class="max-w-full h-auto rounded-lg shadow-lg" />
       </div>
-      
+
       <div v-else-if="comprobanteSeleccionado.tipo_comprobante === 'pdf'" class="h-[600px]">
-        <iframe 
-          :src="comprobanteSeleccionado.comprobante_url"
-          class="w-full h-full border-0 rounded-lg"
-        ></iframe>
+        <iframe :src="comprobanteSeleccionado.comprobante_url" class="w-full h-full border-0 rounded-lg"></iframe>
       </div>
     </div>
-    
+
     <template #footer>
-      <Button 
-        label="Descargar" 
-        icon="pi pi-download" 
-        @click="descargarComprobante(comprobanteSeleccionado)"
-        outlined
-      />
+      <Button label="Descargar" icon="pi pi-download" @click="descargarComprobante(comprobanteSeleccionado)" outlined />
       <Button label="Cerrar" icon="pi pi-times" @click="comprobanteDialog = false" />
     </template>
   </Dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { FilterMatchMode } from '@primevue/core/api';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -170,9 +140,21 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
+import Select from 'primevue/select';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { usePagosPersonal, type PagoPersonal } from './usePagosPersonal';
+import UpdatePagoPersonal from './updatePagoPersonal.vue';
+import DeletePagoPersonal from './deletePagoPersonal.vue';
+import axios from 'axios';
+
+// Props y emits para v-model
+const props = defineProps<{
+  sucursalSeleccionada?: string | null;
+  userSubBranchId?: string | null;
+}>();
+
+const emit = defineEmits(['update:sucursalSeleccionada']);
 
 const toast = useToast();
 const confirm = useConfirm();
@@ -182,14 +164,69 @@ const dt = ref();
 const selectedProducts = ref<PagoPersonal[]>([]);
 const comprobanteDialog = ref(false);
 const comprobanteSeleccionado = ref<PagoPersonal | null>(null);
+const editDialog = ref(false);
+const deleteDialog = ref(false);
+const pagoSeleccionado = ref<PagoPersonal | null>(null);
+const sucursales = ref<any[]>([]);
+const loadingSucursales = ref(false);
+const isFirstLoad = ref(true); // Para saber si es la primera carga
+
+// Computed para v-model
+const sucursalSeleccionadaLocal = computed({
+  get: () => props.sucursalSeleccionada,
+  set: (value) => emit('update:sucursalSeleccionada', value)
+});
 
 const filters = ref({
   'global': { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 
+const loadSucursales = async () => {
+  loadingSucursales.value = true;
+  try {
+    const response = await axios.get('/sub-branches/search');
+    sucursales.value = response.data.data || [];
+    
+    // Si viene una sucursal seleccionada del padre, usarla
+    // Si no, seleccionar la sucursal del usuario si existe en la lista
+    if (!sucursalSeleccionadaLocal.value && props.userSubBranchId) {
+      const sucursalExiste = sucursales.value.find(s => s.id === props.userSubBranchId);
+      if (sucursalExiste) {
+        emit('update:sucursalSeleccionada', props.userSubBranchId);
+      }
+    }
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las sucursales', life: 3000 });
+  } finally {
+    loadingSucursales.value = false;
+  }
+};
+
+const onSucursalChange = () => {
+  isFirstLoad.value = false; // Ya no es la primera carga
+  loadPagos();
+};
+
 const loadPagos = async () => {
   try {
-    await pagosStore.fetchPagos();
+    let params = {};
+    
+    // Si es la primera carga y la sucursal es la del usuario, NO enviamos parámetro
+    // para que el backend use su lógica automática
+    if (isFirstLoad.value && sucursalSeleccionadaLocal.value === props.userSubBranchId) {
+      params = {};
+    }
+    // Si el usuario cambió la sucursal o seleccionó otra, enviamos el parámetro
+    else if (sucursalSeleccionadaLocal.value) {
+      params = { sub_branch_id: sucursalSeleccionadaLocal.value };
+    }
+    
+    await pagosStore.fetchPagos(params);
+    
+    // Después de la primera carga, marcamos que ya no es la primera vez
+    if (isFirstLoad.value) {
+      isFirstLoad.value = false;
+    }
   } catch (error) {
     toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los pagos', life: 3000 });
   }
@@ -215,26 +252,26 @@ const descargarComprobante = (pago: PagoPersonal) => {
   }
 };
 
-const confirmDeleteProduct = (pago: PagoPersonal) => {
-  confirm.require({
-    message: `¿Estás seguro de que deseas eliminar el pago de ${pago.empleado} por ${pago.monto_formateado}?`,
-    header: 'Confirmar eliminación',
-    icon: 'pi pi-exclamation-triangle',
-    acceptClass: 'p-button-danger',
-    accept: () => deleteProduct(pago)
-  });
+const editPago = (pago: PagoPersonal) => {
+  pagoSeleccionado.value = pago;
+  editDialog.value = true;
 };
 
-const deleteProduct = async (pago: PagoPersonal) => {
-  try {
-    await pagosStore.deletePago(pago.id);
-    toast.add({ severity: 'success', summary: 'Éxito', detail: 'Pago eliminado correctamente', life: 3000 });
-  } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el pago', life: 3000 });
-  }
+const confirmDeletePago = (pago: PagoPersonal) => {
+  pagoSeleccionado.value = pago;
+  deleteDialog.value = true;
+};
+
+const onPagoUpdated = () => {
+  loadPagos();
+};
+
+const onPagoDeleted = () => {
+  loadPagos();
 };
 
 onMounted(() => {
+  loadSucursales();
   loadPagos();
 });
 

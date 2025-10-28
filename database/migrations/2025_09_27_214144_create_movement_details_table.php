@@ -15,6 +15,8 @@ return new class extends Migration {
             $table->integer('boxes')->default(0);
             $table->integer('units_per_box')->default(1);
             $table->date('expiry_date')->nullable();
+            $table->integer('fractions')->default(0);
+            $table->enum('quantity_type', ['packages', 'fractions', 'both'])->default('packages');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->unsignedBigInteger('deleted_by')->nullable();

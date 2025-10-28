@@ -128,4 +128,9 @@ public function getFullNameAttribute()
             }
         });
     }
+    public function activeBooking(){
+        return $this->hasOne(Booking::class)
+            ->where('status', 'checked_in')
+            ->orderByDesc('check_in'); // 👈 reemplaza latestOfMany()
+    }
 }

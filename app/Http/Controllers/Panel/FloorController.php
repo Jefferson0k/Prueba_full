@@ -111,6 +111,7 @@ class FloorController extends Controller{
             return $this->exception($e, 'No se pudieron obtener los pisos con conteos de habitaciones.');
         }
     }
+
     public function floorRoom(){
         $user = Auth::user();
         if (!$user->sub_branch_id) {
@@ -121,11 +122,12 @@ class FloorController extends Controller{
             ], 404);
         }
         $floors = Floor::with([
-                'rooms.roomType'
-            ])
-            ->where('sub_branch_id', $user->sub_branch_id)
-            ->active()
-            ->get();
+            'rooms.roomType',
+            'rooms.activeBooking.customer',
+        ])
+        ->where('sub_branch_id', $user->sub_branch_id)
+        ->active()
+        ->get();
         return FloorRoomResource::collection($floors);
     }
 }

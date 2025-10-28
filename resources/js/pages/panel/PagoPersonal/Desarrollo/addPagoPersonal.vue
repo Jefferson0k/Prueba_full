@@ -16,22 +16,25 @@
           id="user"
           v-model="pago.user_id"
           :options="usuarios"
-          optionLabel="name1"
+          optionLabel="name"
           optionValue="id"
           placeholder="Seleccione un empleado"
           filter
           :loading="loadingUsuarios"
           class="w-full"
-          @filter="searchUsuarios"
+          :disabled="usuarios.length === 0"
         >
           <template #option="slotProps">
             <div class="flex flex-col">
-              <span class="font-semibold">{{ slotProps.option.name1 }}</span>
-              <span class="text-sm text-gray-600">DNI: {{ slotProps.option.dni }}</span>
+              <span class="font-semibold">{{ slotProps.option.name }}</span>
+              <span class="text-sm text-gray-600">DNI: {{ slotProps.option.dni || 'N/A' }}</span>
             </div>
           </template>
         </Select>
         <small class="text-red-500" v-if="errors.user_id">{{ errors.user_id }}</small>
+        <small class="text-gray-600" v-if="usuarios.length === 0 && !loadingUsuarios">
+          No hay empleados en esta sucursal
+        </small>
       </div>
 
       <div class="flex flex-col gap-2">
@@ -164,6 +167,11 @@ import { useToast } from 'primevue/usetoast';
 import axios from 'axios';
 import { usePagosPersonal } from './usePagosPersonal';
 
+// Props
+const props = defineProps<{
+  sucursalSeleccionada: string | null;
+}>();
+
 const toast = useToast();
 const pagosStore = usePagosPersonal();
 const emit = defineEmits(['refresh']);
@@ -200,7 +208,56 @@ const metodosPago = ref([
   { label: 'Cheque', value: 'cheque' }
 ]);
 
+const loadUsuarios = async () => {
+  if (!props.sucursalSeleccionada) {
+    toast.add({ 
+      severity: 'warn', 
+      summary: 'Advertencia', 
+      detail: 'Debe seleccionar una sucursal primero', 
+      life: 3000 
+    });
+    return;
+  }
+  
+  loadingUsuarios.value = true;
+  try {
+    const response = await axios.get('/usuarios/search/by-subranch', {
+      params: { sub_branch_id: props.sucursalSeleccionada }
+    });
+    usuarios.value = response.data.data || [];
+    
+    if (usuarios.value.length === 0) {
+      toast.add({ 
+        severity: 'info', 
+        summary: 'Información', 
+        detail: 'No hay empleados registrados en esta sucursal', 
+        life: 3000 
+      });
+    }
+  } catch (error: any) {
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Error', 
+      detail: error.response?.data?.message || 'No se pudieron cargar los usuarios de la sucursal', 
+      life: 3000 
+    });
+    usuarios.value = [];
+  } finally {
+    loadingUsuarios.value = false;
+  }
+};
+
 const openNew = () => {
+  if (!props.sucursalSeleccionada) {
+    toast.add({ 
+      severity: 'warn', 
+      summary: 'Advertencia', 
+      detail: 'Debe seleccionar una sucursal antes de registrar un pago', 
+      life: 3000 
+    });
+    return;
+  }
+
   pago.value = {
     user_id: null,
     monto: 0,
@@ -213,6 +270,9 @@ const openNew = () => {
   };
   selectedFile.value = null;
   errors.value = {};
+  
+  loadUsuarios();
+  
   productDialog.value = true;
 };
 
@@ -220,24 +280,6 @@ const hideDialog = () => {
   productDialog.value = false;
   errors.value = {};
   selectedFile.value = null;
-};
-
-const loadUsuarios = async (searchTerm = '') => {
-  loadingUsuarios.value = true;
-  try {
-    const response = await axios.get('/usuarios', {
-      params: { page: 1, per_page: 50, search: searchTerm }
-    });
-    usuarios.value = response.data.data || [];
-  } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los usuarios', life: 3000 });
-  } finally {
-    loadingUsuarios.value = false;
-  }
-};
-
-const searchUsuarios = (event: any) => {
-  loadUsuarios(event.value);
 };
 
 const onFileSelect = (event: any) => {
@@ -324,6 +366,6 @@ const saveProduct = async () => {
 };
 
 onMounted(() => {
-  loadUsuarios();
+  // No cargamos usuarios aquí, solo cuando se abre el diálogo
 });
 </script>

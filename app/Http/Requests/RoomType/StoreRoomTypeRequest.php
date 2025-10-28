@@ -2,19 +2,14 @@
 
 namespace App\Http\Requests\RoomType;
 
+use App\Models\RoomType;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 
-class StoreRoomTypeRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        // Solo usuarios autenticados pueden registrar tipos de habitación
-        return Auth::check();
+class StoreRoomTypeRequest extends FormRequest{
+    public function authorize(): bool{
+        return $this->user()->can('create', RoomType::class);
     }
-
-    public function rules(): array
-    {
+    public function rules(): array{
         return [
             'name' => 'required|string|max:100|unique:room_types,name',
             'description' => 'nullable|string|max:500',
@@ -25,9 +20,7 @@ class StoreRoomTypeRequest extends FormRequest
             'is_active' => 'sometimes|boolean',
         ];
     }
-
-    public function messages(): array
-    {
+    public function messages(): array{
         return [
             'name.required' => 'El nombre del tipo de habitación es obligatorio.',
             'name.unique' => 'Ya existe un tipo de habitación con este nombre.',

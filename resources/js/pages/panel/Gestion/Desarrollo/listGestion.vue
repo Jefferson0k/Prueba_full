@@ -51,7 +51,7 @@
                                                 </span>
                                                 <div class="text-lg font-semibold mt-1">{{ room.room_type }}</div>
                                             </div>
-                                            <div class="flex items-center gap-3">
+                                            <div class="flex items-center gap-3 flex-wrap">
                                                 <Tag 
                                                     :value="getStatusLabel(room.status)" 
                                                     :severity="getStatusSeverity(room.status)"
@@ -63,33 +63,97 @@
                                             </div>
                                         </div>
 
-                                        <div class="flex flex-col md:items-end gap-4">
-                                            <div class="bg-surface-100 dark:bg-surface-700 px-4 py-2 rounded-lg">
+                                        <div class="flex flex-col md:flex-row md:items-center gap-4">
+                                            <div v-if="room.status === 'occupied' && room.customer" class="flex flex-col gap-1 text-sm md:text-right">
+                                                <div class="flex items-center gap-2 text-surface-600 dark:text-surface-400">
+                                                    <i class="pi pi-user text-xs"></i>
+                                                    <span class="font-medium">{{ room.customer }}</span>
+                                                </div>
+                                                <div v-if="room.check_in" class="flex items-center gap-2 text-surface-500 dark:text-surface text-xs">
+                                                    <i class="pi pi-sign-in"></i>
+                                                    <span>{{ formatCheckIn(room.check_in) }}</span>
+                                                </div>
+                                                <div v-if="room.check_out" class="flex items-center gap-2 text-surface-500 dark:text-surface-500 text-xs">
+                                                    <i class="pi pi-sign-out"></i>
+                                                    <span>{{ formatCheckOut(room.check_out) }}</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Timer con alerta de tiempo vencido -->
+                                            <div 
+                                                v-if="room.status === 'occupied' || room.status === 'available'"
+                                                class="bg-surface-100 dark:bg-surface-700 px-4 py-2 rounded-lg transition-all duration-300"
+                                                :class="{ 
+                                                    'animate-pulse bg-orange-100 dark:bg-orange-900/30 border-2 border-orange-400': isNearCheckout(room.check_out),
+                                                    'animate-bounce bg-red-100 dark:bg-red-900/30 border-2 border-red-500': isCheckoutExpired(room.check_out)
+                                                }"
+                                            >
                                                 <div class="flex items-center gap-2">
-                                                    <i class="pi pi-clock text-lg"></i>
-                                                    <span class="font-mono text-lg font-semibold">00:00:00</span>
+                                                    <i class="pi pi-clock text-lg" :class="{
+                                                        'text-orange-600': isNearCheckout(room.check_out) && !isCheckoutExpired(room.check_out),
+                                                        'text-red-600': isCheckoutExpired(room.check_out)
+                                                    }"></i>
+                                                    <span class="font-mono text-lg font-semibold" :class="{
+                                                        'text-orange-600 dark:text-orange-400': isNearCheckout(room.check_out) && !isCheckoutExpired(room.check_out),
+                                                        'text-red-600 dark:text-red-400': isCheckoutExpired(room.check_out)
+                                                    }">
+                                                        {{ calculateElapsedTime(room.check_in) }}
+                                                    </span>
+                                                </div>
+                                                <div v-if="isCheckoutExpired(room.check_out)" class="text-xs text-red-600 dark:text-red-400 font-semibold mt-1">
+                                                    ¡TIEMPO VENCIDO!
                                                 </div>
                                             </div>
                                             
-                                            <div class="flex gap-2">
+                                            <div class="flex gap-2" v-if="room.status !== 'maintenance'">
                                                 <Button 
                                                     icon="pi pi-eye" 
                                                     severity="info"
                                                     outlined
                                                     size="small"
                                                     @click="viewRoomDetails(room.id)"
+                                                    v-tooltip.top="'Ver detalles'"
                                                 />
+                                                
+                                                <!-- Botones para habitación OCUPADA -->
+                                                <template v-if="room.status === 'occupied'">
+                                                    <Button 
+                                                        v-if="isCheckoutExpired(room.check_out)"
+                                                        icon="pi pi-clock" 
+                                                        severity="warning"
+                                                        outlined
+                                                        size="small"
+                                                        @click="extendTime(room.id)"
+                                                        v-tooltip.top="'Extender tiempo'"
+                                                    />
+                                                    <Button 
+                                                        v-if="isCheckoutExpired(room.check_out)"
+                                                        icon="pi pi-dollar" 
+                                                        severity="success"
+                                                        outlined
+                                                        size="small"
+                                                        @click="chargeExtraTime(room.id)"
+                                                        v-tooltip.top="'Cobrar tiempo extra'"
+                                                    />
+                                                    <Button 
+                                                        icon="pi pi-sign-out" 
+                                                        severity="danger"
+                                                        outlined
+                                                        size="small"
+                                                        @click="finishBooking(room.id)"
+                                                        v-tooltip.top="'Finalizar reserva'"
+                                                    />
+                                                </template>
+
+                                                <!-- Botón para habitación en LIMPIEZA -->
                                                 <Button 
-                                                    icon="pi pi-pencil" 
-                                                    severity="warning"
+                                                    v-if="room.status === 'cleaning'"
+                                                    icon="pi pi-check-circle" 
+                                                    severity="success"
                                                     outlined
                                                     size="small"
-                                                />
-                                                <Button 
-                                                    icon="pi pi-cog" 
-                                                    severity="secondary"
-                                                    outlined
-                                                    size="small"
+                                                    @click="openLiberarDialog(room.id)"
+                                                    v-tooltip.top="'Liberar habitación'"
                                                 />
                                             </div>
                                         </div>
@@ -153,14 +217,48 @@
                                         />
                                     </div>
 
-                                    <div class="bg-surface-100 dark:bg-surface-700 px-4 py-3 rounded-lg mb-4">
-                                        <div class="flex items-center justify-center gap-2">
-                                            <i class="pi pi-clock text-lg"></i>
-                                            <span class="font-mono text-lg font-semibold">00:00:00</span>
+                                    <div v-if="room.status === 'occupied' && room.customer" class="mb-4 text-sm space-y-2">
+                                        <div class="flex items-start gap-2 text-surface-600 dark:text-surface-400">
+                                            <i class="pi pi-user text-xs mt-1"></i>
+                                            <span class="font-medium">{{ room.customer }}</span>
+                                        </div>
+                                        <div v-if="room.check_in" class="flex items-center gap-2 text-surface-500 dark:text-surface-500 text-xs">
+                                            <i class="pi pi-sign-in"></i>
+                                            <span>{{ formatCheckIn(room.check_in) }}</span>
+                                        </div>
+                                        <div v-if="room.check_out" class="flex items-center gap-2 text-surface-500 dark:text-surface-500 text-xs">
+                                            <i class="pi pi-sign-out"></i>
+                                            <span>{{ formatCheckOut(room.check_out) }}</span>
                                         </div>
                                     </div>
 
-                                    <div class="flex gap-2">
+                                    <!-- Timer con alerta de tiempo vencido -->
+                                    <div 
+                                        v-if="room.status === 'occupied' || room.status === 'available'"
+                                        class="bg-surface-100 dark:bg-surface-700 px-4 py-3 rounded-lg mb-4 transition-all duration-300"
+                                        :class="{ 
+                                            'animate-pulse bg-orange-100 dark:bg-orange-900/30 border-2 border-orange-400': isNearCheckout(room.check_out),
+                                            'animate-bounce bg-red-100 dark:bg-red-900/30 border-2 border-red-500': isCheckoutExpired(room.check_out)
+                                        }"
+                                    >
+                                        <div class="flex items-center justify-center gap-2">
+                                            <i class="pi pi-clock text-lg" :class="{
+                                                'text-orange-600': isNearCheckout(room.check_out) && !isCheckoutExpired(room.check_out),
+                                                'text-red-600': isCheckoutExpired(room.check_out)
+                                            }"></i>
+                                            <span class="font-mono text-lg font-semibold" :class="{
+                                                'text-orange-600 dark:text-orange-400': isNearCheckout(room.check_out) && !isCheckoutExpired(room.check_out),
+                                                'text-red-600 dark:text-red-400': isCheckoutExpired(room.check_out)
+                                            }">
+                                                {{ calculateElapsedTime(room.check_in) }}
+                                            </span>
+                                        </div>
+                                        <div v-if="isCheckoutExpired(room.check_out)" class="text-xs text-center text-red-600 dark:text-red-400 font-semibold mt-1">
+                                            ¡TIEMPO VENCIDO!
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-2 flex-wrap" v-if="room.status !== 'maintenance'">
                                         <Button 
                                             icon="pi pi-eye" 
                                             severity="info"
@@ -168,20 +266,52 @@
                                             class="flex-1"
                                             size="small"
                                             @click="viewRoomDetails(room.id)"
+                                            v-tooltip.top="'Ver detalles'"
                                         />
+                                        
+                                        <!-- Botones para habitación OCUPADA -->
+                                        <template v-if="room.status === 'occupied'">
+                                            <Button 
+                                                v-if="isCheckoutExpired(room.check_out)"
+                                                icon="pi pi-clock" 
+                                                severity="warning"
+                                                outlined
+                                                class="flex-1"
+                                                size="small"
+                                                @click="extendTime(room.id)"
+                                                v-tooltip.top="'Extender tiempo'"
+                                            />
+                                            <Button 
+                                                v-if="isCheckoutExpired(room.check_out)"
+                                                icon="pi pi-dollar" 
+                                                severity="success"
+                                                outlined
+                                                class="flex-1"
+                                                size="small"
+                                                @click="chargeExtraTime(room.id)"
+                                                v-tooltip.top="'Cobrar tiempo extra'"
+                                            />
+                                            <Button 
+                                                icon="pi pi-sign-out" 
+                                                severity="danger"
+                                                outlined
+                                                class="flex-1"
+                                                size="small"
+                                                @click="finishBooking(room.id)"
+                                                v-tooltip.top="'Finalizar reserva'"
+                                            />
+                                        </template>
+
+                                        <!-- Botón para habitación en LIMPIEZA -->
                                         <Button 
-                                            icon="pi pi-pencil" 
-                                            severity="warning"
+                                            v-if="room.status === 'cleaning'"
+                                            icon="pi pi-check-circle" 
+                                            severity="success"
                                             outlined
                                             class="flex-1"
                                             size="small"
-                                        />
-                                        <Button 
-                                            icon="pi pi-cog" 
-                                            severity="secondary"
-                                            outlined
-                                            class="flex-1"
-                                            size="small"
+                                            @click="openLiberarDialog(room.id)"
+                                            v-tooltip.top="'Liberar habitación'"
                                         />
                                     </div>
                                 </div>
@@ -240,11 +370,36 @@
                 </div>
             </template>
         </DataView>
+
+        <!-- Diálogos -->
+        <LiberarRoom 
+            v-model:visible="showLiberarDialog" 
+            :roomId="selectedRoomId"
+            @room-liberated="handleRoomLiberated"
+        />
+
+        <ExtenderTiempo 
+            v-model:visible="showExtenderDialog" 
+            :roomId="selectedRoomId"
+            @time-extended="handleTimeExtended"
+        />
+
+        <CobrarTiempoExtra 
+            v-model:visible="showCobrarDialog" 
+            :roomId="selectedRoomId"
+            @extra-time-charged="handleExtraTimeCharged"
+        />
+
+        <FinalizarReserva 
+            v-model:visible="showFinalizarDialog" 
+            :roomId="selectedRoomId"
+            @booking-finished="handleBookingFinished"
+        />
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { router } from '@inertiajs/vue3';
 import DataView from 'primevue/dataview';
 import SelectButton from 'primevue/selectbutton';
@@ -252,14 +407,37 @@ import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import Button from 'primevue/button';
 import Skeleton from 'primevue/skeleton';
+import LiberarRoom from './liberarRoom.vue';
+import ExtenderTiempo from './extenderTiempo.vue';
+import CobrarTiempoExtra from './cobrarTiempoExtra.vue';
+import FinalizarReserva from './finalizarReserva.vue';
 
 const floors = ref([]);
 const layout = ref('grid');
 const options = ref(['list', 'grid']);
 const loading = ref(true);
+const currentTime = ref(new Date());
+const showLiberarDialog = ref(false);
+const showExtenderDialog = ref(false);
+const showCobrarDialog = ref(false);
+const showFinalizarDialog = ref(false);
+const selectedRoomId = ref(null);
+let timerInterval = null;
 
 onMounted(async () => {
     await fetchFloors();
+    
+    // Actualizar el tiempo cada segundo para que el timer sea dinámico
+    timerInterval = setInterval(() => {
+        currentTime.value = new Date();
+    }, 1000);
+});
+
+onUnmounted(() => {
+    // Limpiar el interval cuando el componente se desmonte
+    if (timerInterval) {
+        clearInterval(timerInterval);
+    }
 });
 
 const fetchFloors = async () => {
@@ -273,6 +451,121 @@ const fetchFloors = async () => {
     } finally {
         loading.value = false;
     }
+};
+
+const calculateElapsedTime = (checkInTime) => {
+    if (!checkInTime) {
+        return '00:00:00';
+    }
+    
+    // Parsear la fecha de check-in
+    const checkIn = new Date(checkInTime);
+    
+    // Calcular la diferencia en milisegundos
+    const diff = currentTime.value - checkIn;
+    
+    // Convertir a horas, minutos y segundos
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    // Formatear con ceros a la izquierda
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
+
+const formatCheckIn = (checkInTime) => {
+    if (!checkInTime) {
+        return '-';
+    }
+    
+    const date = new Date(checkInTime);
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `Entrada: ${hours}:${minutes}`;
+};
+
+const formatCheckOut = (checkOutTime) => {
+    if (!checkOutTime) {
+        return '-';
+    }
+    
+    const date = new Date(checkOutTime);
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `Salida: ${hours}:${minutes}`;
+};
+
+const isNearCheckout = (checkOutTime) => {
+    if (!checkOutTime) {
+        return false;
+    }
+    
+    const checkOut = new Date(checkOutTime);
+    const diff = checkOut - currentTime.value;
+    
+    // Convertir a minutos
+    const minutes = Math.floor(diff / (1000 * 60));
+    
+    // Alertar si faltan 5 minutos o menos para el checkout
+    return minutes <= 5 && minutes > 0;
+};
+
+const isCheckoutExpired = (checkOutTime) => {
+    if (!checkOutTime) {
+        return false;
+    }
+    
+    const checkOut = new Date(checkOutTime);
+    const diff = checkOut - currentTime.value;
+    
+    // Retorna true si el tiempo ya pasó (diff es negativo o cero)
+    return diff <= 0;
+};
+
+const finishBooking = (roomId) => {
+    selectedRoomId.value = roomId;
+    showFinalizarDialog.value = true;
+};
+
+const extendTime = (roomId) => {
+    selectedRoomId.value = roomId;
+    showExtenderDialog.value = true;
+};
+
+const chargeExtraTime = (roomId) => {
+    selectedRoomId.value = roomId;
+    showCobrarDialog.value = true;
+};
+
+const openLiberarDialog = (roomId) => {
+    selectedRoomId.value = roomId;
+    showLiberarDialog.value = true;
+};
+
+const handleRoomLiberated = async () => {
+    await fetchFloors();
+    showLiberarDialog.value = false;
+    selectedRoomId.value = null;
+};
+
+const handleTimeExtended = async () => {
+    await fetchFloors();
+    showExtenderDialog.value = false;
+    selectedRoomId.value = null;
+};
+
+const handleExtraTimeCharged = async () => {
+    await fetchFloors();
+    showCobrarDialog.value = false;
+    selectedRoomId.value = null;
+};
+
+const handleBookingFinished = async () => {
+    await fetchFloors();
+    showFinalizarDialog.value = false;
+    selectedRoomId.value = null;
 };
 
 const getStatusLabel = (status) => {

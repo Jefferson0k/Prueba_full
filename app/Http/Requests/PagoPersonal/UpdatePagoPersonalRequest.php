@@ -8,7 +8,8 @@ class UpdatePagoPersonalRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $pagoPersonal = $this->route('pagoPersonal');
+        return $pagoPersonal && $this->user()->can('update', $pagoPersonal);
     }
 
     public function rules(): array

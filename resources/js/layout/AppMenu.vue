@@ -19,8 +19,7 @@ const model = computed(() => [
         items: [
             hasPermission('view branches') && { label: 'Sucursales', icon: 'pi pi-fw pi-building', to: '/panel/sucursales' },
             hasPermission('view caja') && { label: 'Cajas', icon: 'pi pi-fw pi-sitemap', to: '/panel/cajas' },
-            hasPermission('ver tipos de habitación') && { label: 'Tipos de Habitación', icon: 'pi pi-fw pi-th-large', to: '/panel/tipos-habitacion' },
-            { label: 'Tipos de Habitación', icon: 'pi pi-fw pi-th-large', to: '/panel/tipos-habitacion' },
+            hasPermission('view habitacion') && { label: 'Tipos de Habitación', icon: 'pi pi-fw pi-th-large', to: '/panel/tipos-habitacion' },
         ].filter(Boolean),
     },
     {
@@ -30,17 +29,9 @@ const model = computed(() => [
         ].filter(Boolean),
     },
     {
-        label: 'Reservas',
-        items: [
-            hasPermission('view bookings') && { label: 'Gestión de Reservas', icon: 'pi pi-fw pi-calendar', to: '/panel/reservas' },
-            hasPermission('create bookings') && { label: 'Nueva Reserva', icon: 'pi pi-fw pi-plus-circle', to: '/panel/reservas/nueva' },
-        ].filter(Boolean),
-    },
-    {
         label: 'Pagos',
         items: [
-            hasPermission('view payments') && { label: 'Gestión de Pagos', icon: 'pi pi-fw pi-credit-card', to: '/panel/pagos/personal' },
-            hasPermission('refund payments') && { label: 'Reembolsos', icon: 'pi pi-fw pi-refresh', to: '/panel/pagos/reembolsos' },
+            hasPermission('view pagos personal') && { label: 'Gestión de Pagos', icon: 'pi pi-fw pi-credit-card', to: '/panel/pagos/personal' },
         ].filter(Boolean),
     },
     {
@@ -85,14 +76,14 @@ const model = computed(() => [
     {
         label: 'Reportes',
         items: [
-            { label: 'Ingresos de Habitaciones', icon: 'pi pi-fw pi-home', to: '/panel/reportes/ingresos-habitaciones' },
-            { label: 'Ingreso de Productos', icon: 'pi pi-fw pi-shopping-cart', to: '/panel/reportes/ingreso-productos' },
-            { label: 'Ingreso Bruto', icon: 'pi pi-fw pi-chart-line', to: '/panel/reportes/ingreso-bruto' },
-            { label: 'Egresos', icon: 'pi pi-fw pi-money-bill', to: '/panel/reportes/egresos' },
-            { label: 'Ingreso Neto', icon: 'pi pi-fw pi-chart-bar', to: '/panel/reportes/ingreso-neto' },
-            { label: 'Número de Clientes', icon: 'pi pi-fw pi-users', to: '/panel/reportes/numero-clientes' },
-            { label: 'Productos Más Vendidos', icon: 'pi pi-fw pi-star', to: '/panel/reportes/productos-mas-vendidos' },
-            { label: 'Productos Menos Vendidos', icon: 'pi pi-fw pi-chart-pie', to: '/panel/reportes/productos-menos-vendidos' },
+            hasPermission('view ingresos de habitaciones reporte') && { label: 'Ingresos de Habitaciones', icon: 'pi pi-fw pi-home', to: '/panel/reportes/ingresos-habitaciones' },
+            hasPermission('view ingreso de producto reporte') && { label: 'Ingreso de Productos', icon: 'pi pi-fw pi-shopping-cart', to: '/panel/reportes/ingreso-productos' },
+            hasPermission('view ingreso bruto reporte') && { label: 'Ingreso Bruto', icon: 'pi pi-fw pi-chart-line', to: '/panel/reportes/ingreso-bruto' },
+            hasPermission('view egreso reporte') && { label: 'Egresos', icon: 'pi pi-fw pi-money-bill', to: '/panel/reportes/egresos' },
+            hasPermission('view ingreso neto reporte') && { label: 'Ingreso Neto', icon: 'pi pi-fw pi-chart-bar', to: '/panel/reportes/ingreso-neto' },
+            hasPermission('view numero de clientes reporte') && { label: 'Número de Clientes', icon: 'pi pi-fw pi-users', to: '/panel/reportes/numero-clientes' },
+            hasPermission('view producto mas vendidos reporte') && { label: 'Productos Más Vendidos', icon: 'pi pi-fw pi-star', to: '/panel/reportes/productos-mas-vendidos' },
+            hasPermission('view proudcto menos vendidos reporte') && { label: 'Productos Menos Vendidos', icon: 'pi pi-fw pi-chart-pie', to: '/panel/reportes/productos-menos-vendidos' },
         ].filter(Boolean),
     },
     {

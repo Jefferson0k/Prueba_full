@@ -3,7 +3,7 @@
     <!-- Filtros -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+        <label class="block text-sm font-medium mb-2">Buscar</label>
         <InputText
           v-model="filters.search"
           placeholder="Buscar por nombre..."
@@ -13,8 +13,8 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-        <Dropdown
+        <label class="block text-sm font-medium mb-2">Estado</label>
+        <Select
           v-model="filters.status"
           :options="statusOptions"
           optionLabel="label"
@@ -26,8 +26,8 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Activo</label>
-        <Dropdown
+        <label class="block text-sm font-medium mb-2">Activo</label>
+        <Select
           v-model="filters.is_active"
           :options="activeOptions"
           optionLabel="label"
@@ -64,6 +64,7 @@
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       :rowsPerPageOptions="[10, 15, 25, 50]"
       currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} cajas"
+      class="p-datatable-sm"
     >
       <template #empty>
         <div class="text-center py-8">
@@ -150,12 +151,12 @@
     >
       <div v-if="selectedCash" class="grid grid-cols-2 gap-4">
         <div>
-          <p class="text-sm text-gray-600 mb-1">Nombre</p>
+          <p class="text-sm mb-1">Nombre</p>
           <p class="font-semibold">{{ selectedCash.name }}</p>
         </div>
 
         <div>
-          <p class="text-sm text-gray-600 mb-1">Estado</p>
+          <p class="text-sm mb-1">Estado</p>
           <Tag 
             :value="selectedCash.status.toUpperCase()" 
             :severity="getStatusSeverity(selectedCash.status)"
@@ -163,12 +164,12 @@
         </div>
 
         <div>
-          <p class="text-sm text-gray-600 mb-1">Sucursal</p>
+          <p class="text-sm mb-1">Sucursal</p>
           <p class="font-semibold">{{ selectedCash.sub_branch.name }}</p>
         </div>
 
         <div>
-          <p class="text-sm text-gray-600 mb-1">Activo</p>
+          <p class="text-sm mb-1">Activo</p>
           <Tag 
             :value="selectedCash.is_active ? 'SÍ' : 'NO'" 
             :severity="selectedCash.is_active ? 'success' : 'danger'"
@@ -176,49 +177,49 @@
         </div>
 
         <div>
-          <p class="text-sm text-gray-600 mb-1">Monto de Apertura</p>
+          <p class="text-sm mb-1">Monto de Apertura</p>
           <p class="font-semibold">
             {{ selectedCash.opening_amount ? `S/. ${formatMoney(selectedCash.opening_amount)}` : '-' }}
           </p>
         </div>
 
         <div>
-          <p class="text-sm text-gray-600 mb-1">Monto de Cierre</p>
+          <p class="text-sm mb-1">Monto de Cierre</p>
           <p class="font-semibold">
             {{ selectedCash.closing_amount ? `S/. ${formatMoney(selectedCash.closing_amount)}` : '-' }}
           </p>
         </div>
 
         <div>
-          <p class="text-sm text-gray-600 mb-1">Fecha de Apertura</p>
+          <p class="text-sm mb-1">Fecha de Apertura</p>
           <p class="font-semibold">
             {{ selectedCash.opened_at ? formatDate(selectedCash.opened_at) : '-' }}
           </p>
         </div>
 
         <div>
-          <p class="text-sm text-gray-600 mb-1">Fecha de Cierre</p>
+          <p class="text-sm mb-1">Fecha de Cierre</p>
           <p class="font-semibold">
             {{ selectedCash.closed_at ? formatDate(selectedCash.closed_at) : '-' }}
           </p>
         </div>
 
         <div>
-          <p class="text-sm text-gray-600 mb-1">Abierto Por</p>
+          <p class="text-sm mb-1">Abierto Por</p>
           <p class="font-semibold">
             {{ selectedCash.opened_by_user ? selectedCash.opened_by_user.name : '-' }}
           </p>
         </div>
 
         <div>
-          <p class="text-sm text-gray-600 mb-1">Cerrado Por</p>
+          <p class="text-sm mb-1">Cerrado Por</p>
           <p class="font-semibold">
             {{ selectedCash.closed_by_user ? selectedCash.closed_by_user.name : '-' }}
           </p>
         </div>
 
         <div class="col-span-2">
-          <p class="text-sm text-gray-600 mb-1">Fecha de Creación</p>
+          <p class="text-sm mb-1">Fecha de Creación</p>
           <p class="font-semibold">{{ formatDate(selectedCash.created_at) }}</p>
         </div>
       </div>
@@ -227,6 +228,7 @@
         <Button 
           label="Cerrar" 
           icon="pi pi-times" 
+          text
           @click="showDetailDialog = false" 
           severity="secondary"
         />
@@ -242,10 +244,10 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import { useToast } from 'primevue/usetoast';
+import Select from 'primevue/select';
 
 const toast = useToast();
 
