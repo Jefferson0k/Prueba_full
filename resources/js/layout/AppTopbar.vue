@@ -38,7 +38,7 @@ const goToProfile = () => {
                         />
                     </g>
                 </svg>
-                <span>Hoteles</span>
+                <span>OK</span>
             </Link>
         </div>
 

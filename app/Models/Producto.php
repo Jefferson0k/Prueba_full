@@ -18,7 +18,4 @@ class Producto extends Model{
     public function categoria(){
         return $this->belongsTo(Categoria::class, 'categoria_id');
     }
-    public function inventarios(){
-        return $this->hasMany(Inventario::class, 'producto_id');
-    }
 }

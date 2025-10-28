@@ -4,7 +4,7 @@ services:
   app:
     build:
       context: ./docker/php
-    container_name: hoteles_app
+    container_name: pruebas_app
     restart: always
     working_dir: /var/www
     volumes:
@@ -12,11 +12,11 @@ services:
     depends_on:
       - postgres
     networks:
-      - hoteles
+      - pruebas
 
   nginx:
     image: nginx:latest
-    container_name: hoteles_nginx
+    container_name: pruebas_nginx
     restart: always
     ports:
       - "80:80"
@@ -26,27 +26,27 @@ services:
     depends_on:
       - app
     networks:
-      - hoteles
+      - pruebas
 
   postgres:
     image: postgres:16.8
-    container_name: hoteles_postgres
+    container_name: pruebas_postgres
     restart: always
     shm_size: 128mb
     environment:
-      POSTGRES_USER: hoteles_user
+      POSTGRES_USER: pruebas_user
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: hoteles
+      POSTGRES_DB: pruebas
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - hoteles
+      - pruebas
 
   adminer:
     image: adminer:latest
-    container_name: hoteles_adminer
+    container_name: pruebas_adminer
     restart: always
     ports:
       - "8080:8080"
@@ -55,10 +55,10 @@ services:
     depends_on:
       - postgres
     networks:
-      - hoteles
+      - pruebas
   node:
     image: node:22-alpine
-    container_name: hoteles_node
+    container_name: pruebas_node
     working_dir: /var/www
     volumes:
       - .:/var/www
@@ -66,21 +66,21 @@ services:
     ports:
       - "5173:5173"
     networks:
-      - hoteles
+      - pruebas
 
   composer:
     build:
       context: ./docker/php
-    container_name: hoteles_composer
+    container_name: pruebas_composer
     working_dir: /var/www
     volumes:
       - .:/var/www
     entrypoint: ["composer"]
     networks:
-      - hoteles
+      - pruebas
 
 networks:
-  hoteles:
+  pruebas:
     driver: bridge
 
 volumes:
