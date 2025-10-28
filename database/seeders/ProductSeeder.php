@@ -13,7 +13,7 @@ class ProductSeeder extends Seeder{
             $this->command->warn('No hay categorías. Ejecuta primero ProductCategorySeeder.');
             return;
         }
-        Product::factory(50)->make()->each(function ($product) use ($categories) {
+        Product::factory(5)->make()->each(function ($product) use ($categories) {
             $product->category_id = $categories->random()->id;
             $product->save();
         });

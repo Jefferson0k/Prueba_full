@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch } from 'vue';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
@@ -30,23 +30,11 @@ const producto = ref({
     name: '',
     category_id: null,
     is_active: false,
-    purchase_price: null,
-    sale_price: null,
-    unit_type: null,
+    price: null,
     description: '',
-    is_fractionable: false,
-    fraction_units: null,
 });
 
 const categorias = ref([]);
-
-const tiposUnidad = ref([
-    { label: 'Unidad', value: 'piece' },
-    { label: 'Botella', value: 'bottle' },
-    { label: 'Paquete', value: 'pack' },
-    { label: 'Kilogramo', value: 'kg' },
-    { label: 'Litro', value: 'liter' },
-]);
 
 watch(() => props.visible, async (val) => {
     if (val && props.productoId) {
@@ -65,12 +53,8 @@ const fetchProducto = async () => {
             name: p.name || p.nombre,
             category_id: p.category_id || p.categoria_id,
             is_active: p.is_active !== undefined ? p.is_active : p.estado,
-            purchase_price: parseFloat(p.purchase_price || p.precio_compra),
-            sale_price: parseFloat(p.sale_price || p.precio_venta),
-            unit_type: p.unit_type || p.unidad,
+            price: parseFloat(p.price || p.precio),
             description: p.description || p.descripcion || '',
-            is_fractionable: p.is_fractionable || false,
-            fraction_units: p.fraction_units || null
         };
     } catch {
         toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el producto', life: 3000 });
@@ -88,24 +72,12 @@ const fetchCategorias = async () => {
     }
 };
 
-// Watch para limpiar fraction_units cuando is_fractionable es false
-watch(() => producto.value.is_fractionable, (newValue) => {
-    if (!newValue) {
-        producto.value.fraction_units = null;
-    }
-});
-
 const updateProducto = async () => {
     submitted.value = true;
     serverErrors.value = {};
 
     // Preparar datos para envío
     const dataToSend = { ...producto.value };
-    
-    // Si no es fraccionable, asegurar que fraction_units sea null
-    if (!dataToSend.is_fractionable) {
-        dataToSend.fraction_units = null;
-    }
 
     try {
         await axios.put(`/producto/${props.productoId}`, dataToSend);
@@ -166,13 +138,13 @@ const updateProducto = async () => {
                     </div>
                 </div>
 
-                <!-- Precio Compra -->
+                <!-- Precio -->
                 <div class="col-span-6">
-                    <label class="block font-bold mb-2">Precio Compra <span class="text-red-500">*</span></label>
-                    <InputNumber v-model="producto.purchase_price" mode="currency" currency="PEN" locale="es-PE"
+                    <label class="block font-bold mb-2">Precio <span class="text-red-500">*</span></label>
+                    <InputNumber v-model="producto.price" mode="currency" currency="PEN" locale="es-PE"
                         :minFractionDigits="2" fluid
-                        :class="{ 'p-invalid': submitted && serverErrors.purchase_price }" />
-                    <small v-if="serverErrors.purchase_price" class="text-red-500">{{ serverErrors.purchase_price[0] }}</small>
+                        :class="{ 'p-invalid': submitted && serverErrors.price }" />
+                    <small v-if="serverErrors.price" class="text-red-500">{{ serverErrors.price[0] }}</small>
                 </div>
 
                 <!-- Categoría -->

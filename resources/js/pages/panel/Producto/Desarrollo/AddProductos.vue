@@ -30,12 +30,12 @@
                     </div>
                 </div>
                 
-                <!-- Precio Compra -->
+                <!-- Precio -->
                 <div class="col-span-6">
                     <label class="block font-bold mb-2">Precio <span class="text-red-500">*</span></label>
-                    <InputText v-model.number="producto.purchase_price" type="number" fluid min="0" step="0.01" />
-                    <small v-if="submitted && (producto.purchase_price === null || producto.purchase_price === '')" class="text-red-500">El precio de compra es obligatorio.</small>
-                    <small v-else-if="serverErrors.purchase_price" class="text-red-500">{{ serverErrors.purchase_price[0] }}</small>
+                    <InputText v-model.number="producto.price" type="number" fluid min="0" step="0.01" />
+                    <small v-if="submitted && (producto.price === null || producto.price === '')" class="text-red-500">El precio es obligatorio.</small>
+                    <small v-else-if="serverErrors.price" class="text-red-500">{{ serverErrors.price[0] }}</small>
                 </div>
 
                 <!-- Categoría -->
@@ -62,7 +62,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import axios from 'axios';
 import Dialog from 'primevue/dialog';
 import Toolbar from 'primevue/toolbar';
@@ -83,43 +83,20 @@ const emit = defineEmits(['producto-agregado']);
 const producto = ref({
     name: '',
     is_active: true,
-    purchase_price: null,
-    sale_price: null,
+    price: null,
     category_id: null,
-    unit_type: null,
     description: '',
-    is_fractionable: false,
-    fraction_units: null,
 });
 
 const categorias = ref([]);
-
-const tiposUnidad = ref([
-    { label: 'Unidad', value: 'piece' },
-    { label: 'Botella', value: 'bottle' },
-    { label: 'Paquete', value: 'pack' },
-    { label: 'Kilogramo', value: 'kg' },
-    { label: 'Litro', value: 'liter' },
-]);
-
-// Watch para limpiar fraction_units cuando is_fractionable es false
-watch(() => producto.value.is_fractionable, (newValue) => {
-    if (!newValue) {
-        producto.value.fraction_units = null;
-    }
-});
 
 function resetProducto() {
     producto.value = {
         name: '',
         is_active: true,
-        purchase_price: null,
-        sale_price: null,
+        price: null,
         category_id: null,
-        unit_type: null,
         description: '',
-        is_fractionable: false,
-        fraction_units: null,
     };
     serverErrors.value = {};
     submitted.value = false;
@@ -148,30 +125,16 @@ async function fetchCategorias() {
 function validateForm() {
     const errors = [];
     
-    // Validaciones básicas
     if (!producto.value.name || producto.value.name.length < 2) {
         errors.push('El nombre es obligatorio y debe tener al menos 2 caracteres');
     }
     
-    if (producto.value.purchase_price === null || producto.value.purchase_price === '') {
-        errors.push('El precio de compra es obligatorio');
-    }
-    
-    if (producto.value.sale_price === null || producto.value.sale_price === '') {
-        errors.push('El precio de venta es obligatorio');
+    if (producto.value.price === null || producto.value.price === '') {
+        errors.push('El precio es obligatorio');
     }
     
     if (!producto.value.category_id) {
         errors.push('La categoría es obligatoria');
-    }
-    
-    if (!producto.value.unit_type) {
-        errors.push('El tipo de unidad es obligatorio');
-    }
-    
-    // Validación específica para productos fraccionables
-    if (producto.value.is_fractionable && (!producto.value.fraction_units || producto.value.fraction_units < 1)) {
-        errors.push('Las unidades de fracción son obligatorias cuando el producto es fraccionable');
     }
     
     return errors;
@@ -195,11 +158,6 @@ function guardarProducto() {
 
     // Preparar datos para envío
     const dataToSend = { ...producto.value };
-    
-    // Si no es fraccionable, asegurar que fraction_units sea null
-    if (!dataToSend.is_fractionable) {
-        dataToSend.fraction_units = null;
-    }
 
     axios.post('/producto', dataToSend)
         .then(() => {

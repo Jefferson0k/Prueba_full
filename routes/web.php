@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\RolesController;
 use App\Http\Controllers\Api\UsuariosController;
 use App\Http\Controllers\Web\Categoria\CategoriaWeb;
 use App\Http\Controllers\Web\Producto\ProductoWeb;
+use App\Http\Controllers\Web\UsuarioWebController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;

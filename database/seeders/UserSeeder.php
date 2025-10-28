@@ -37,22 +37,7 @@ class UserSeeder extends Seeder
             ]
         );
 
-        $admin_2 = User::firstOrCreate(
-            ['dni' => '07777777'],
-            [
-                'name' => 'Luis Fernando',
-                'apellidos' => 'Atocha Gonzales',
-                'nacimiento' => '2003-03-11',
-                'email' => 'luisatocha@gmail.com',
-                'username' => 'LATOCHA05',
-                'password' => Hash::make('12345678'),
-                'status' => true,
-                'restablecimiento' => 0,
-            ]
-        );
-
         // Asignar roles
         if ($adminRole) $admin_1->assignRole($adminRole);
-        if ($adminRole) $admin_2->assignRole($adminRole);
     }
 }

@@ -29,13 +29,6 @@ const model = computed(() => [
             },
         ].filter(Boolean),
     },
-    {
-        label: 'Usuarios',
-        items: [
-            hasPermission('ver usuarios') && { label: 'Gestión de Usuarios', icon: 'pi pi-fw pi-users', to: '/panel/usuario' },
-            hasPermission('ver roles') && { label: 'Roles', icon: 'pi pi-fw pi-id-card', to: '/panel/roles' },
-        ].filter(Boolean),
-    },
 ].filter(section => section.items.length > 0));
 </script>
 
