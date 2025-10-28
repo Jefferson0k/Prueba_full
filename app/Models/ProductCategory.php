@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Traits\HasAuditFields;
+use App\Traits\GeneratesCode;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +12,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class ProductCategory extends Model implements Auditable
 {
-    use HasFactory, HasUuids, SoftDeletes, \OwenIt\Auditing\Auditable;
+    use HasFactory, HasUuids, SoftDeletes, HasAuditFields, GeneratesCode, \OwenIt\Auditing\Auditable;
 
     protected $fillable = [
         'name', 'code', 'description', 'is_active'

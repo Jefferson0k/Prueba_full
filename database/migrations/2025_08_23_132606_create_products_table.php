@@ -12,11 +12,8 @@ return new class extends Migration{
             $table->string('code')->unique();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->decimal('purchase_price', 10, 2); // Precio de compra
-            $table->decimal('sale_price', 10, 2);     // Precio de venta
-            $table->enum('unit_type', ['piece', 'bottle', 'pack', 'kg', 'liter']);
-            $table->boolean('is_fractionable')->default(false);
-            $table->integer('fraction_units')->nullable()->default(null);
+            $table->decimal('price', 10, 2);
+            $table->integer('stock')->default(0);
             $table->boolean('is_active')->default(true);
             
             // Auditoría

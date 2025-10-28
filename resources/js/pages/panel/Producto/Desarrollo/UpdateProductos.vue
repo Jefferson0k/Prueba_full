@@ -175,15 +175,6 @@ const updateProducto = async () => {
                     <small v-if="serverErrors.purchase_price" class="text-red-500">{{ serverErrors.purchase_price[0] }}</small>
                 </div>
 
-                <!-- Precio Venta -->
-                <div class="col-span-6">
-                    <label class="block font-bold mb-2">Precio Venta <span class="text-red-500">*</span></label>
-                    <InputNumber v-model="producto.sale_price" mode="currency" currency="PEN" locale="es-PE"
-                        :minFractionDigits="2" fluid
-                        :class="{ 'p-invalid': submitted && serverErrors.sale_price }" />
-                    <small v-if="serverErrors.sale_price" class="text-red-500">{{ serverErrors.sale_price[0] }}</small>
-                </div>
-
                 <!-- Categoría -->
                 <div class="col-span-6">
                     <label class="block font-bold mb-2">Categoría <span class="text-red-500">*</span></label>
@@ -191,45 +182,6 @@ const updateProducto = async () => {
                         placeholder="Seleccione una categoría" fluid
                         :class="{ 'p-invalid': submitted && serverErrors.category_id }" />
                     <small v-if="serverErrors.category_id" class="text-red-500">{{ serverErrors.category_id[0] }}</small>
-                </div>
-
-                <!-- Tipo de Unidad -->
-                <div class="col-span-6">
-                    <label class="block font-bold mb-2">Tipo de Unidad <span class="text-red-500">*</span></label>
-                    <Select v-model="producto.unit_type" :options="tiposUnidad" optionLabel="label" optionValue="value"
-                        placeholder="Seleccione tipo de unidad" fluid
-                        :class="{ 'p-invalid': submitted && serverErrors.unit_type }" />
-                    <small v-if="serverErrors.unit_type" class="text-red-500">{{ serverErrors.unit_type[0] }}</small>
-                </div>
-
-                <!-- Es Fraccionable y Unidades de Fracción -->
-                <div class="col-span-12 grid grid-cols-12 gap-4">
-                    <!-- Es Fraccionable -->
-                    <div class="col-span-6">
-                        <label class="block font-bold mb-2">¿Es Fraccionable?</label>
-                        <div class="flex items-center gap-2">
-                            <Checkbox v-model="producto.is_fractionable" :binary="true" />
-                            <Tag :value="producto.is_fractionable ? 'Sí' : 'No'" :severity="producto.is_fractionable ? 'info' : 'secondary'" />
-                        </div>
-                        <small class="text-gray-600">Indica si el producto puede venderse en fracciones</small>
-                        <small v-if="serverErrors.is_fractionable" class="text-red-500 block">{{ serverErrors.is_fractionable[0] }}</small>
-                    </div>
-
-                    <!-- Unidades de Fracción -->
-                    <div class="col-span-6" v-show="producto.is_fractionable">
-                        <label class="block font-bold mb-2">Unidades por Fracción <span class="text-red-500">*</span></label>
-                        <InputNumber 
-                            v-model="producto.fraction_units" 
-                            fluid 
-                            :min="1" 
-                            :step="1" 
-                            placeholder="Ej: 12 (para docena)"
-                            :class="{ 'p-invalid': submitted && serverErrors.fraction_units }" 
-                        />
-                        <small class="text-gray-600">Número de unidades que componen una fracción completa</small>
-                        <small v-if="submitted && producto.is_fractionable && (!producto.fraction_units || producto.fraction_units < 1)" class="text-red-500 block">Las unidades de fracción son obligatorias cuando el producto es fraccionable.</small>
-                        <small v-else-if="serverErrors.fraction_units" class="text-red-500 block">{{ serverErrors.fraction_units[0] }}</small>
-                    </div>
                 </div>
 
                 <!-- Descripción -->
@@ -244,8 +196,8 @@ const updateProducto = async () => {
         </div>
 
         <template #footer>
-            <Button label="Cancelar" icon="pi pi-times" text @click="dialogVisible = false" />
-            <Button label="Guardar" icon="pi pi-check" @click="updateProducto" :loading="loading" />
+            <Button label="Cancelar" icon="pi pi-times" severity="secondary" text @click="dialogVisible = false" />
+            <Button label="Guardar" icon="pi pi-check" severity="contrast" @click="updateProducto" :loading="loading" />
         </template>
     </Dialog>
 </template>

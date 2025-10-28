@@ -5,23 +5,17 @@ namespace App\Pipelines;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 
-class FilterByCategory
-{
+class FilterByCategory{
     protected $category;
-
-    public function __construct(?string $category)
-    {
+    public function __construct(?string $category){
         $this->category = $category;
     }
-
-    public function handle($request, Closure $next)
-    {
+    public function handle($request, Closure $next){
         if ($this->category) {
             $request->whereHas('category', function (Builder $query) {
                 $query->where('name', 'ILIKE', '%' . $this->category . '%');
             });
         }
-
         return $next($request);
     }
 }

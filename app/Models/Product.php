@@ -19,12 +19,8 @@ class Product extends Model implements Auditable
         'code',
         'name',
         'description',
-        'purchase_price',
-        'sale_price',
-        'unit_type',
+        'price',
         'is_active',
-        'is_fractionable',
-        'fraction_units',
     ];
 
     protected $casts = [
@@ -41,55 +37,12 @@ class Product extends Model implements Auditable
         return $this->belongsTo(Categoria::class, 'category_id');
     }
 
-    public function inventory()
-    {
-        return $this->hasMany(Inventory::class);
-    }
-
-    public function movements()
-    {
-        return $this->hasMany(InventoryMovement::class);
-    }
-
-    public function consumptions()
-    {
-        return $this->hasMany(BookingConsumption::class);
-    }
-
     // Scopes
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
-
-    public function scopeInStock($query, $branchId)
-    {
-        return $query->whereHas('inventory', function ($q) use ($branchId) {
-            $q->where('branch_id', $branchId)->where('current_stock', '>', 0);
-        });
-    }
-
-    // Métodos auxiliares
-    public function getStockForBranch($branchId)
-    {
-        return $this->inventory()->where('branch_id', $branchId)->first()?->current_stock ?? 0;
-    }
-
-    public function isInStockForBranch($branchId, $quantity = 1)
-    {
-        return $this->getStockForBranch($branchId) >= $quantity;
-    }
-
-    public function isFractionable(): bool
-    {
-        return $this->is_fractionable;
-    }
-
-    public function getFractionUnits(): int
-    {
-        return $this->fraction_units ?: 1;
-    }
-
+    
     protected static function boot()
     {
         parent::boot();

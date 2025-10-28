@@ -12,18 +12,13 @@ class ProductFactory extends Factory
 
     public function definition(): array
     {
-        $isFractionable = $this->faker->boolean(30); // 30% de probabilidad de ser fraccionable
-
         return [
             'category_id'       => ProductCategory::factory(),
             'name'              => $this->faker->word(),
             'description'       => $this->faker->sentence(),
-            'purchase_price'    => $this->faker->randomFloat(2, 1, 300), // precio de compra
-            'sale_price'        => $this->faker->randomFloat(2, 301, 500), // precio de venta mayor que compra
-            'unit_type'         => $this->faker->randomElement(['piece', 'bottle', 'pack', 'kg', 'liter']),
+            'price'    => $this->faker->randomFloat(2, 1, 300),
+            'stock'    => $this->faker->numberBetween(0, 1000),
             'is_active'         => true,
-            'is_fractionable'   => $isFractionable,
-            'fraction_units'    => $isFractionable ? $this->faker->numberBetween(1, 24) : 0,
         ];
     }
 }

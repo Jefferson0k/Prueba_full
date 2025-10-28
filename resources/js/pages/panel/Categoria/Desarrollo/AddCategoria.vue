@@ -36,8 +36,8 @@
         </div>
 
         <template #footer>
-            <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
-            <Button label="Guardar" icon="pi pi-check" @click="guardarCategoria" />
+            <Button label="Cancelar" icon="pi pi-times" text severity="secondary" @click="hideDialog" />
+            <Button label="Guardar" icon="pi pi-check" severity="contrast" @click="guardarCategoria" />
         </template>
     </Dialog>
 </template>

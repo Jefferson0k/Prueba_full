@@ -125,8 +125,8 @@ const updateCategoria = async () => {
             </div>
         </div>
         <template #footer>
-            <Button label="Cancelar" icon="pi pi-times" text @click="dialogVisible = false" />
-            <Button label="Guardar" icon="pi pi-check" @click="updateCategoria" :loading="loading" />
+            <Button label="Cancelar" icon="pi pi-times" severity="secondary" text @click="dialogVisible = false" />
+            <Button label="Guardar" icon="pi pi-check" severity="contrast" @click="updateCategoria" :loading="loading" />
         </template>
     </Dialog>
 </template>

@@ -32,18 +32,10 @@
                 
                 <!-- Precio Compra -->
                 <div class="col-span-6">
-                    <label class="block font-bold mb-2">Precio Compra <span class="text-red-500">*</span></label>
+                    <label class="block font-bold mb-2">Precio <span class="text-red-500">*</span></label>
                     <InputText v-model.number="producto.purchase_price" type="number" fluid min="0" step="0.01" />
                     <small v-if="submitted && (producto.purchase_price === null || producto.purchase_price === '')" class="text-red-500">El precio de compra es obligatorio.</small>
                     <small v-else-if="serverErrors.purchase_price" class="text-red-500">{{ serverErrors.purchase_price[0] }}</small>
-                </div>
-
-                <!-- Precio Venta -->
-                <div class="col-span-6">
-                    <label class="block font-bold mb-2">Precio Venta <span class="text-red-500">*</span></label>
-                    <InputText v-model.number="producto.sale_price" fluid type="number" min="0" step="0.01" />
-                    <small v-if="submitted && (producto.sale_price === null || producto.sale_price === '')" class="text-red-500">El precio de venta es obligatorio.</small>
-                    <small v-else-if="serverErrors.sale_price" class="text-red-500">{{ serverErrors.sale_price[0] }}</small>
                 </div>
 
                 <!-- Categoría -->
@@ -52,44 +44,6 @@
                     <Select v-model="producto.category_id" :options="categorias" fluid optionLabel="label" optionValue="value" placeholder="Seleccione categoría" />
                     <small v-if="submitted && !producto.category_id" class="text-red-500">La categoría es obligatoria.</small>
                     <small v-else-if="serverErrors.category_id" class="text-red-500">{{ serverErrors.category_id[0] }}</small>
-                </div>
-
-                <!-- Tipo de Unidad -->
-                <div class="col-span-6">
-                    <label class="block font-bold mb-2">Tipo de Unidad <span class="text-red-500">*</span></label>
-                    <Select v-model="producto.unit_type" :options="tiposUnidad" fluid optionLabel="label" optionValue="value" placeholder="Seleccione tipo de unidad" />
-                    <small v-if="submitted && !producto.unit_type" class="text-red-500">El tipo de unidad es obligatorio.</small>
-                    <small v-else-if="serverErrors.unit_type" class="text-red-500">{{ serverErrors.unit_type[0] }}</small>
-                </div>
-
-                <!-- Es Fraccionable y Unidades de Fracción -->
-                <div class="col-span-12 grid grid-cols-12 gap-4">
-                    <!-- Es Fraccionable -->
-                    <div class="col-span-6">
-                        <label class="block font-bold mb-2">¿Es Fraccionable?</label>
-                        <div class="flex items-center gap-2">
-                            <Checkbox v-model="producto.is_fractionable" :binary="true" />
-                            <Tag :value="producto.is_fractionable ? 'Sí' : 'No'" :severity="producto.is_fractionable ? 'info' : 'secondary'" />
-                        </div>
-                        <small class="text-gray-600">Indica si el producto puede venderse en fracciones</small>
-                        <small v-if="serverErrors.is_fractionable" class="text-red-500 block">{{ serverErrors.is_fractionable[0] }}</small>
-                    </div>
-
-                    <!-- Unidades de Fracción -->
-                    <div class="col-span-6" v-show="producto.is_fractionable">
-                        <label class="block font-bold mb-2">Unidades por Fracción <span class="text-red-500">*</span></label>
-                        <InputText 
-                            v-model.number="producto.fraction_units" 
-                            type="number" 
-                            fluid 
-                            min="1" 
-                            step="1" 
-                            placeholder="Ej: 12 (para docena)" 
-                        />
-                        <small class="text-gray-600">Número de unidades que componen una fracción completa</small>
-                        <small v-if="submitted && producto.is_fractionable && (!producto.fraction_units || producto.fraction_units < 1)" class="text-red-500 block">Las unidades de fracción son obligatorias cuando el producto es fraccionable.</small>
-                        <small v-else-if="serverErrors.fraction_units" class="text-red-500 block">{{ serverErrors.fraction_units[0] }}</small>
-                    </div>
                 </div>
 
                 <!-- Descripción -->
@@ -101,8 +55,8 @@
             </div>
         </div>
         <template #footer>
-            <Button label="Cancelar" icon="pi pi-times" text @click="hideDialog" />
-            <Button label="Guardar" icon="pi pi-check" @click="guardarProducto" />
+            <Button label="Cancelar" icon="pi pi-times" severity="secondary" text @click="hideDialog" />
+            <Button label="Guardar" icon="pi pi-check" severity="contrast" @click="guardarProducto" />
         </template>
     </Dialog>
 </template>
